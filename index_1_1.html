@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADM de Obras Enerwatt — Projeto Âncora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f;
+    --panel:#10131b;
+    --panel-2:#151924;
+    --border:#232838;
+    --border-soft:#1a1e2b;
+    --text:#eef0f5;
+    --text-dim:#9aa0b4;
+    --text-faint:#5c6178;
+    --accent:#e8722a;
+    --accent-dim:#e8722a33;
+    --red:#e5484d;
+    --red-bg:#e5484d1a;
+    --yellow:#e0a940;
+    --yellow-bg:#e0a9401a;
+    --green:#2fae63;
+    --green-bg:#2fae631a;
+    --blue:#4f8ff0;
+    --blue-bg:#4f8ff01a;
+    --radius:12px;
+    --radius-sm:8px;
+    --font-ui:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, #e8722a0d, transparent),
+      radial-gradient(ellipse 700px 500px at 100% 10%, #e8722a08, transparent);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:var(--font-ui);
+    -webkit-font-smoothing:antialiased;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .hero-banner{
+    position:relative;height:150px;border-radius:var(--radius);overflow:hidden;
+    margin-bottom:20px;border:1px solid var(--border-soft);
+  }
+  .hero-banner svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .hero-overlay{position:absolute;left:22px;bottom:16px;z-index:2;}
+  .hero-title{font-size:19px;font-weight:800;letter-spacing:.01em;color:#fff;text-shadow:0 2px 12px #000000a0;}
+  .hero-sub{font-size:11.5px;color:#d8dae4;margin-top:2px;font-family:var(--font-mono);text-shadow:0 1px 8px #000000a0;}
+  #app{display:flex;min-height:100vh;}
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:230px;
+    flex-shrink:0;
+    background:var(--panel);
+    border-right:1px solid var(--border-soft);
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{
+    padding:18px 20px 18px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .brand-logo{
+    background:#ffffff;border-radius:8px;padding:10px 12px;margin-bottom:12px;
+    display:flex;align-items:center;justify-content:flex-start;
+  }
+  .brand-logo img{height:26px;width:auto;display:block;}
+  .brand-title{font-size:14px;font-weight:800;letter-spacing:.02em;color:var(--text);}
+  .brand-sub{font-size:11px;color:var(--text-faint);margin-top:3px;font-family:var(--font-mono);letter-spacing:.02em;}
+  .nav{padding:14px 10px;flex:1;overflow-y:auto;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 12px;border-radius:var(--radius-sm);
+    color:var(--text-dim);font-size:13px;font-weight:500;
+    cursor:pointer;margin-bottom:2px;transition:background .12s,color .12s;
+    border:1px solid transparent;
+    user-select:none;
+  }
+  .nav-item:hover{background:var(--panel-2);color:var(--text);}
+  .nav-item.active{background:var(--accent-dim);color:var(--accent);border-color:#e8722a40;font-weight:600;}
+  .nav-icon{width:16px;text-align:center;font-size:14px;opacity:.9;}
+  .nav-badge{
+    margin-left:auto;font-family:var(--font-mono);font-size:10px;
+    background:var(--panel-2);color:var(--text-faint);padding:1px 6px;border-radius:20px;
+  }
+  .nav-item.active .nav-badge{background:#e8722a2e;color:var(--accent);}
+  .sidebar-foot{border-top:1px solid var(--border-soft);}
+  .lock-row{
+    display:flex;align-items:center;gap:8px;padding:13px 20px;
+    font-size:11px;color:var(--text-faint);cursor:pointer;transition:background .12s,color .12s;
+  }
+  .lock-row:hover{background:var(--panel-2);color:var(--text-dim);}
+
+  /* ---------- MOBILE TOPBAR / DRAWER (hidden on desktop) ---------- */
+  .mobile-topbar{
+    display:none;align-items:center;gap:12px;
+    position:sticky;top:0;z-index:30;
+    background:var(--panel);border-bottom:1px solid var(--border-soft);
+    padding:0 12px;height:52px;flex-shrink:0;
+  }
+  .hamburger{
+    background:none;border:none;color:var(--text);font-size:20px;line-height:1;
+    padding:6px 8px;cursor:pointer;border-radius:8px;
+  }
+  .hamburger:active{background:var(--panel-2);}
+  .mobile-topbar-title{font-size:13px;font-weight:700;letter-spacing:.02em;}
+  .sidebar-backdrop{display:none;position:fixed;inset:0;background:#000000a0;z-index:39;}
+
+  @media (max-width:860px){
+    #app{flex-direction:column;}
+    .mobile-topbar{display:flex;}
+    .sidebar{
+      position:fixed;top:0;left:0;height:100dvh;width:78%;max-width:290px;
+      z-index:40;transform:translateX(-100%);transition:transform .22s ease;
+      box-shadow:0 0 40px #000000a0;
+    }
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-backdrop.show{display:block;}
+    .main{padding:16px 14px 50px;max-width:100%;}
+    .grid-4, .grid-3{grid-template-columns:1fr 1fr;}
+    .grid-2{grid-template-columns:1fr;}
+    .page-title{font-size:18px;}
+    .hero-banner{height:110px;}
+    .hero-title{font-size:15px;}
+    .hero-sub{font-size:10px;}
+    .form-grid{grid-template-columns:1fr;}
+    .modal-overlay{padding:10px;}
+    .modal{max-width:100%;margin:0;max-height:92vh;}
+    th, td{padding:8px 9px;font-size:12px;}
+    .panel{padding:14px 14px;}
+    .search-box{min-width:0;flex:1;}
+  }
+  @media (max-width:480px){
+    .grid-4, .grid-3{grid-template-columns:1fr;}
+    .kpi-value{font-size:22px;}
+  }
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1;min-width:0;padding:28px 32px 60px;max-width:1400px;}
+  .topbar{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+  .page-title{font-size:21px;font-weight:800;letter-spacing:-.01em;}
+  .page-sub{font-size:12.5px;color:var(--text-faint);margin-top:3px;}
+  .topbar-actions{display:flex;gap:8px;}
+
+  /* ---------- BUTTONS ---------- */
+  .btn{
+    font-family:var(--font-ui);font-size:12.5px;font-weight:600;
+    padding:8px 14px;border-radius:8px;border:1px solid var(--border);
+    background:var(--panel-2);color:var(--text);cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;transition:all .12s;
+    white-space:nowrap;
+  }
+  .btn:hover{border-color:#333a4f;background:#1a1f2c;}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#1a0d02;font-weight:700;}
+  .btn-primary:hover{background:#f2822f;}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--text-dim);}
+  .btn-ghost:hover{background:var(--panel-2);color:var(--text);}
+  .btn-danger{color:var(--red);}
+  .btn-sm{padding:5px 10px;font-size:11.5px;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* ---------- CARDS / KPI ---------- */
+  .grid{display:grid;gap:14px;}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr);}.grid-3{grid-template-columns:repeat(2,1fr);}}
+
+  .kpi{
+    background:var(--panel);border:1px solid var(--border-soft);border-radius:var(--radius);
+    padding:16px 18px;position:relative;overflow:hidden;
+  }
+  .kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--kpi-color,var(--accent));}
+  .kpi-label{font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .kpi-value{font-size:26px;font-weight:800;margin-top:6px;font-family:var(--font-mono);}
+  .kpi-foot{font-size:11px;color:var(--text-dim);margin-top:4px;}
+
+  .panel{
+    background:var(--panel);border:1px solid var(--border-soft);border-radius:var(--radius);
+    padding:18px 20px;margin-bottom:18px;
+  }
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .panel-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .panel-title .cnt{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);font-weight:500;}
+
+  /* ---------- CHIPS / BADGES ---------- */
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;
+    white-space:nowrap;font-family:var(--font-ui);
+  }
+  .chip-red{background:var(--red-bg);color:var(--red);}
+  .chip-yellow{background:var(--yellow-bg);color:var(--yellow);}
+  .chip-green{background:var(--green-bg);color:var(--green);}
+  .chip-blue{background:var(--blue-bg);color:var(--blue);}
+  .chip-gray{background:#ffffff0f;color:var(--text-dim);}
+  .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+  /* ---------- TABLE ---------- */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{
+    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--text-faint);font-weight:700;padding:9px 12px;border-bottom:1px solid var(--border-soft);
+    white-space:nowrap;
+  }
+  td{padding:10px 12px;border-bottom:1px solid var(--border-soft);vertical-align:middle;color:var(--text);white-space:nowrap;}
+  tbody tr{transition:background .1s;}
+  tbody tr:hover{background:var(--panel-2);}
+  .mono{font-family:var(--font-mono);}
+  .text-dim{color:var(--text-dim);}
+  .text-faint{color:var(--text-faint);}
+  .row-actions{display:flex;gap:4px;}
+  .empty-state{padding:40px 20px;text-align:center;color:var(--text-faint);}
+  .empty-state .big{font-size:28px;margin-bottom:8px;}
+
+  /* ---------- SEARCH / FILTER ---------- */
+  .search-box{
+    display:flex;align-items:center;gap:8px;background:var(--panel-2);
+    border:1px solid var(--border);border-radius:8px;padding:7px 12px;min-width:220px;
+  }
+  .search-box input{background:none;border:none;outline:none;color:var(--text);font-size:12.5px;width:100%;font-family:var(--font-ui);}
+  .search-box input::placeholder{color:var(--text-faint);}
+  select.filter-select{
+    background:var(--panel-2);border:1px solid var(--border);border-radius:8px;
+    color:var(--text);font-size:12.5px;padding:7px 10px;font-family:var(--font-ui);cursor:pointer;
+  }
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:#000000b3;backdrop-filter:blur(2px);
+    display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .modal{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    width:100%;max-width:560px;max-height:88vh;overflow-y:auto;
+    box-shadow:0 20px 60px #000000a0;
+  }
+  .modal-head{
+    padding:18px 22px;border-bottom:1px solid var(--border-soft);
+    display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--panel);z-index:2;
+  }
+  .modal-title{font-size:15px;font-weight:700;}
+  .modal-close{cursor:pointer;color:var(--text-faint);font-size:18px;line-height:1;padding:4px;}
+  .modal-close:hover{color:var(--text);}
+  .modal-body{padding:20px 22px;}
+  .modal-foot{padding:16px 22px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--panel);}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-grid.single{grid-template-columns:1fr;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.span2{grid-column:1/-1;}
+  .field label{font-size:11.5px;font-weight:600;color:var(--text-dim);}
+  .field .hint{font-size:10.5px;color:var(--text-faint);}
+  .field input, .field select, .field textarea{
+    background:var(--panel-2);border:1px solid var(--border);border-radius:8px;
+    padding:9px 11px;color:var(--text);font-size:13px;font-family:var(--font-ui);outline:none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--accent);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .section-divider{
+    grid-column:1/-1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--accent);margin-top:6px;padding-top:14px;border-top:1px solid var(--border-soft);
+  }
+
+  /* ---------- TOAST ---------- */
+  #toast-wrap{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+  .toast{
+    background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
+    padding:11px 16px;font-size:12.5px;font-weight:600;box-shadow:0 8px 24px #00000060;
+    display:flex;align-items:center;gap:8px;animation:toast-in .18s ease-out;
+  }
+  .toast.ok{border-color:#2fae6355;color:var(--green);}
+  .toast.err{border-color:#e5484d55;color:var(--red);}
+  @keyframes toast-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- MISC ---------- */
+  .bar-track{width:100%;height:6px;background:var(--panel-2);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:4px;}
+  .loading-screen{
+    position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;z-index:999;
+  }
+  .spinner{
+    width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);
+    border-radius:50%;animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-text{font-size:12.5px;color:var(--text-faint);font-family:var(--font-mono);}
+
+  .avatar-list{display:flex;flex-wrap:wrap;gap:5px;}
+  .avatar-tag{
+    font-family:var(--font-mono);font-size:10.5px;background:var(--panel-2);
+    border:1px solid var(--border);border-radius:6px;padding:3px 7px;color:var(--text-dim);
+    display:flex;align-items:center;gap:5px;
+  }
+  .avatar-tag .rm{cursor:pointer;color:var(--text-faint);}
+  .avatar-tag .rm:hover{color:var(--red);}
+  .add-inline{display:flex;gap:6px;margin-top:8px;}
+  .add-inline input{flex:1;}
+
+  .link-btn{background:none;border:none;color:var(--accent);font-size:11.5px;font-weight:600;cursor:pointer;padding:0;}
+  .subtle-card{background:var(--panel-2);border:1px solid var(--border-soft);border-radius:8px;padding:10px 12px;}
+
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:#252a3a;border-radius:6px;}
+  ::-webkit-scrollbar-thumb:hover{background:#2f3547;}
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <div class="loading-text">carregando dados salvos…</div>
+</div>
+
+<div id="app" style="display:none;">
+  <div class="mobile-topbar" id="mobileTopbar">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Abrir menu">☰</button>
+    <span class="mobile-topbar-title" id="mobileTopbarTitle">ADM DE OBRAS ENERWATT</span>
+  </div>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  <div class="sidebar" id="sidebarEl">
+    <div class="brand">
+      <div class="brand-logo"><img src="data:image/png;base64,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" alt="Enerwatt Engenharia"></div>
+      <div class="brand-title" id="brandTitle">ADM DE OBRAS ENERWATT</div>
+      <div class="brand-sub">PROJETO ÂNCORA</div>
+    </div>
+    <div class="nav" id="navList"></div>
+    <div class="sidebar-foot" id="sidebarFoot"></div>
+  </div>
+  <div class="main" id="mainContent"></div>
+</div>
+
+<div id="toast-wrap"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ============================================================
+   ADM DE OBRA — PROJETO ÂNCORA
+   App único (HTML/CSS/JS) com armazenamento persistente
+   ============================================================ */
+
+/* ---------- CONFIG / CONSTANTES ---------- */
+/* ============================================================
+   DADOS INICIAIS — importados da planilha CONTROLE ADM PROJETO ANCORA 2026
+   Usados como fallback quando nao ha dados salvos (ex: site publicado
+   fora do Claude, onde window.storage nao existe).
+   ============================================================ */
+const SEED_DATA = {"efetivo": [{"chapa": "3100", "nome": "ALESSANDRO MENEZES DA SILVA", "cpf": "623.987.501-59", "dtNascimento": "1977-06-19", "funcao": "ELETRICISTA II", "tipo": "A", "dtAdmissao": "2019-12-04", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "6505", "nome": "ALEX GOMES JANUARIO", "cpf": "119.559.264-76", "dtNascimento": "2006-05-25", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2026-01-12", "dtInicioObra": "2026-01-12", "dtDesligamento": null}, {"chapa": "6319", "nome": "ANTONIO DIEGO LOPES DA SILVA", "cpf": "095.091.694-39", "dtNascimento": "1989-07-04", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2025-09-08", "dtInicioObra": "2025-09-08", "dtDesligamento": "2026-07-17"}, {"chapa": "5975", "nome": "ANTONIO REGINALDO FERNANDES", "cpf": "971.118.564-49", "dtNascimento": "1975-12-14", "funcao": "CARPINTEIRO", "tipo": "A", "dtAdmissao": "2025-02-19", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "6143", "nome": "ANTONIO SANTOS DA SILVA", "cpf": "835.718.255-00", "dtNascimento": "1983-08-02", "funcao": "ENCARREGADO DE OBRA", "tipo": "A", "dtAdmissao": "2025-05-20", "dtInicioObra": "2025-05-20", "dtDesligamento": "2026-07-17"}, {"chapa": "778", "nome": "BRUNO RODRIGUES DOS SANTOS", "cpf": "880.296.461-00", "dtNascimento": "1980-10-01", "funcao": "ELETRICISTA II", "tipo": "A", "dtAdmissao": "2011-01-01", "dtInicioObra": "2011-01-01", "dtDesligamento": "2026-07-26"}, {"chapa": "6507", "nome": "CARLOS EDUARDO DA SILVA", "cpf": "094.774.514-95", "dtNascimento": "1986-05-30", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2026-01-12", "dtInicioObra": "2026-01-12", "dtDesligamento": null}, {"chapa": "6919", "nome": "CICERO WESLEY MAGALHAES COSTA", "cpf": "082.809.483-76", "dtNascimento": "2001-10-12", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2026-07-07", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "780", "nome": "CLEBER VAZ BORGES", "cpf": "837.754.631-00", "dtNascimento": "1976-04-13", "funcao": "ENCARREGADO DE MONTAGEM", "tipo": "A", "dtAdmissao": "2011-02-01", "dtInicioObra": "2011-02-01", "dtDesligamento": "2026-07-26"}, {"chapa": "5600", "nome": "CLEITON ALVES TEIXEIRA", "cpf": "031.588.355-33", "dtNascimento": "1988-12-31", "funcao": "CARPINTEIRO", "tipo": "A", "dtAdmissao": "2024-03-18", "dtInicioObra": "2024-06-09", "dtDesligamento": null}, {"chapa": "6138", "nome": "CLEONILSON FRANCISCO SILVA", "cpf": "058.845.223-80", "dtNascimento": "1981-07-10", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2025-05-13", "dtInicioObra": "2026-02-25", "dtDesligamento": null}, {"chapa": "6238", "nome": "DOUGLAS ALVES DE SOUZA", "cpf": "015.964.131-40", "dtNascimento": "1987-08-02", "funcao": "MOTORISTA OPERADOR DE MUNCK", "tipo": "A", "dtAdmissao": "2025-07-21", "dtInicioObra": "2025-11-14", "dtDesligamento": null}, {"chapa": "5735", "nome": "ELY DA LUZ SANTOS", "cpf": "924.652.267-20", "dtNascimento": "1966-01-18", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2024-07-15", "dtInicioObra": "2025-03-27", "dtDesligamento": null}, {"chapa": "6081", "nome": "ERIVALDO MARCELINO DOS SANTOS", "cpf": "029.101.684-76", "dtNascimento": "1977-11-12", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2025-04-02", "dtInicioObra": "2026-01-16", "dtDesligamento": null}, {"chapa": "1553", "nome": "FRANCISCO DE ASSIS SOUZA BORGES", "cpf": "019.015.732-14", "dtNascimento": "1979-01-04", "funcao": "CARPINTEIRO", "tipo": "A", "dtAdmissao": "2018-08-20", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "6082", "nome": "FRANCISCO JOSE ANDRADE TEOFILO", "cpf": "636.973.193-53", "dtNascimento": "1979-10-02", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2025-04-03", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "5116", "nome": "FRANK DIEGO DA COSTA DA SILVA", "cpf": "010.363.583-13", "dtNascimento": "1985-02-06", "funcao": "ENCARREGADO DE OBRA", "tipo": "A", "dtAdmissao": "2023-01-16", "dtInicioObra": "2025-03-20", "dtDesligamento": null}, {"chapa": "6284", "nome": "GARDSON GUILHERME PEREIRA RODRIGUES", "cpf": "076.721.143-01", "dtNascimento": "1999-08-02", "funcao": "MONTADOR ELETROMECANICO", "tipo": "A", "dtAdmissao": "2025-08-26", "dtInicioObra": "2025-08-19", "dtDesligamento": null}, {"chapa": "6987", "nome": "GERSON FERREIRA DE ARAUJO", "cpf": "115.766.174-24", "dtNascimento": "1996-11-06", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2026-07-24", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "6427", "nome": "GILVAN MARTINS DE ANDRADE", "cpf": "008.861.024-13", "dtNascimento": "1978-11-17", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2025-11-17", "dtInicioObra": "2026-03-27", "dtDesligamento": null}, {"chapa": "6479", "nome": "ITAMAR APRIGIO DA SILVA", "cpf": "087.200.764-28", "dtNascimento": "1989-01-25", "funcao": "ARMADOR", "tipo": "A", "dtAdmissao": "2026-01-05", "dtInicioObra": "2026-04-14", "dtDesligamento": null}, {"chapa": "5604", "nome": "JANAILSON SILVA SANTOS", "cpf": "068.981.725-81", "dtNascimento": "1996-02-23", "funcao": "MONTADOR ELETROMECANICO", "tipo": "A", "dtAdmissao": "2024-03-18", "dtInicioObra": "2024-03-18", "dtDesligamento": "2026-07-17"}, {"chapa": "6469", "nome": "JARLYSON BRUNO LIMA DA SILVA", "cpf": "703.089.614-98", "dtNascimento": "2001-08-08", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2025-12-18", "dtInicioObra": "2026-03-30", "dtDesligamento": null}, {"chapa": "6506", "nome": "JOAO BATISTA DO NASCIMENTO", "cpf": "039.776.733-19", "dtNascimento": "1983-07-23", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2026-01-12", "dtInicioObra": "2026-01-12", "dtDesligamento": null}, {"chapa": "6072", "nome": "JOAO PAULO SILVA MARTINS", "cpf": "384.124.478-59", "dtNascimento": "1991-04-05", "funcao": "TÉCNICO DE SEGURANÇA DO TRABALHO", "tipo": "A", "dtAdmissao": "2025-03-28", "dtInicioObra": "2025-03-28", "dtDesligamento": null}, {"chapa": "6481", "nome": "JONAS BATISTA SANTOS DA SILVA", "cpf": "017.627.844-32", "dtNascimento": "1992-02-16", "funcao": "CARPINTEIRO", "tipo": "A", "dtAdmissao": "2026-01-05", "dtInicioObra": "2026-04-14", "dtDesligamento": null}, {"chapa": "5945", "nome": "JORGE ANDRADE DA GLORIA", "cpf": "608.582.878-03", "dtNascimento": "2001-07-19", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2025-01-24", "dtInicioObra": "2026-05-09", "dtDesligamento": null}, {"chapa": "5989", "nome": "JORGE DA SILVA DIAS PEREIRA", "cpf": "150.038.827-00", "dtNascimento": "1995-04-08", "funcao": "ENCARREGADO DE MONTAGEM ELETROMECANICA", "tipo": "A", "dtAdmissao": "2025-03-03", "dtInicioObra": "2025-03-03", "dtDesligamento": "2026-07-17"}, {"chapa": "5976", "nome": "JORGE LUIZ BRAZ DA SILVA", "cpf": "017.314.694-54", "dtNascimento": "1992-05-12", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2025-02-19", "dtInicioObra": "2026-01-27", "dtDesligamento": null}, {"chapa": "6504", "nome": "JOSE ALEXANDRE GUEDES", "cpf": "084.277.334-70", "dtNascimento": "1989-12-26", "funcao": "OPERADOR DE BETONEIRA", "tipo": "A", "dtAdmissao": "2026-01-12", "dtInicioObra": "2026-01-12", "dtDesligamento": null}, {"chapa": "6313", "nome": "JOSE CARLOS CARVALHO GOMES", "cpf": "084.929.753-26", "dtNascimento": "2004-11-14", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2025-09-08", "dtInicioObra": "2025-08-25", "dtDesligamento": null}, {"chapa": "6300", "nome": "JOSE CARLOS DE SOUSA CAMPOS", "cpf": "068.552.714-05", "dtNascimento": "1988-05-10", "funcao": "MOTORISTA OPERADOR DE MUNCK", "tipo": "A", "dtAdmissao": "2025-09-05", "dtInicioObra": "2025-08-12", "dtDesligamento": null}, {"chapa": "6988", "nome": "JOSE CARLOS SILVA CHAGAS", "cpf": "014.284.301-64", "dtNascimento": "1986-11-20", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2026-07-24", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "6207", "nome": "JOSE EDIGAR CHAVES NOLETO", "cpf": "001.442.503-30", "dtNascimento": "1982-07-22", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2025-06-25", "dtInicioObra": "2025-06-28", "dtDesligamento": "2026-08-05"}, {"chapa": "6483", "nome": "JOSE VALDECIR SOUSA DUARTE", "cpf": "058.684.443-02", "dtNascimento": "1993-09-17", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2026-01-05", "dtInicioObra": "2026-04-14", "dtDesligamento": null}, {"chapa": "5703", "nome": "KAIKE DE SOUZA CAMPOS", "cpf": "215.301.447-60", "dtNascimento": "2005-12-04", "funcao": "ELETRICISTA MONTADOR", "tipo": "A", "dtAdmissao": "2024-05-22", "dtInicioObra": "2025-01-14", "dtDesligamento": null}, {"chapa": "6283", "nome": "LEANDRO DOS SANTOS NASCIMENTO", "cpf": "077.194.863-82", "dtNascimento": "1996-10-31", "funcao": "MONTADOR ELETROMECANICO", "tipo": "A", "dtAdmissao": "2025-08-25", "dtInicioObra": "2025-08-17", "dtDesligamento": null}, {"chapa": "6182", "nome": "LEUDENIR DA SILVA MAIA", "cpf": "021.334.213-86", "dtNascimento": "1987-10-02", "funcao": "CARPINTEIRO", "tipo": "A", "dtAdmissao": "2025-06-02", "dtInicioObra": "2025-06-03", "dtDesligamento": null}, {"chapa": "5585", "nome": "LEWIS SMYTH ZAPATA JIMENEZ", "cpf": "713.596.251-60", "dtNascimento": "1965-02-23", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2024-03-05", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "5747", "nome": "LUCIANO PEREIRA DA SILVA", "cpf": "057.869.341-01", "dtNascimento": "1994-11-16", "funcao": "MOTORISTA OPERADOR DE MUNCK", "tipo": "A", "dtAdmissao": "2024-07-26", "dtInicioObra": "2025-03-27", "dtDesligamento": "2026-07-14"}, {"chapa": "5429", "nome": "LUCIANO TAVARES MARTINS", "cpf": "965.266.101-53", "dtNascimento": "1981-03-20", "funcao": "MESTRE DE OBRAS", "tipo": "A", "dtAdmissao": "2023-11-02", "dtInicioObra": "2025-02-04", "dtDesligamento": null}, {"chapa": "6312", "nome": "LUIZ FELIPE COSTA DE OLIVEIRA", "cpf": "016.676.604-62", "dtNascimento": "1998-01-30", "funcao": "ENCARREGADO DE MONTAGEM ELETROMECANICA", "tipo": "A", "dtAdmissao": "2025-09-05", "dtInicioObra": "2025-08-12", "dtDesligamento": "2026-08-03"}, {"chapa": "6726", "nome": "LUZITON ALVES DA GUARDA", "cpf": "478.046.101-49", "dtNascimento": "1969-01-21", "funcao": "CARPINTEIRO", "tipo": "A", "dtAdmissao": "2026-03-05", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "6696", "nome": "MOISES BRANDAO DOS REIS", "cpf": "865.108.942-20", "dtNascimento": "1985-09-09", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2026-02-13", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "6331", "nome": "NATAN MENEZES ALVES", "cpf": "624.691.733-02", "dtNascimento": "1999-12-23", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2025-09-23", "dtInicioObra": "2025-09-23", "dtDesligamento": null}, {"chapa": "6305", "nome": "RAFAEL MAIA DE OLIVEIRA", "cpf": "015.252.963-29", "dtNascimento": "1986-03-04", "funcao": "OPERADOR DE RETROESCAVADEIRA", "tipo": "A", "dtAdmissao": "2025-09-05", "dtInicioObra": "2025-08-12", "dtDesligamento": null}, {"chapa": "6320", "nome": "RENATO PACELLI DA COSTA DO NASCIMENTO", "cpf": "012.912.574-11", "dtNascimento": "1982-02-28", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2025-09-08", "dtInicioObra": "2025-08-25", "dtDesligamento": null}, {"chapa": "6044", "nome": "ROBSON DAVID DE OLIVEIRA", "cpf": "705.622.634-54", "dtNascimento": "1994-02-12", "funcao": "MONTADOR ELETROMECANICO", "tipo": "B", "dtAdmissao": "2025-03-25", "dtInicioObra": "2026-01-16", "dtDesligamento": null}, {"chapa": "6985", "nome": "RONALDO GONCALVES RIBEIRO", "cpf": "024.776.241-56", "dtNascimento": "1986-04-03", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2026-07-24", "dtInicioObra": "2026-07-26", "dtDesligamento": null}, {"chapa": "6379", "nome": "RONIVALDO SANTOS DE SOUSA", "cpf": "881.813.322-53", "dtNascimento": "1987-09-11", "funcao": "SERVENTE", "tipo": "A", "dtAdmissao": "2025-10-20", "dtInicioObra": "2025-10-08", "dtDesligamento": null}, {"chapa": "5961", "nome": "SEBASTIAO PEREIRA DOS SANTOS", "cpf": "064.382.834-60", "dtNascimento": "1986-01-17", "funcao": "PEDREIRO", "tipo": "A", "dtAdmissao": "2025-02-10", "dtInicioObra": "2024-12-12", "dtDesligamento": null}, {"chapa": "5752", "nome": "TIAGO PEREIRA LIMA", "cpf": "016.812.324-05", "dtNascimento": "1992-02-28", "funcao": "MONTADOR ELETROMECANICO", "tipo": "A", "dtAdmissao": "2024-08-05", "dtInicioObra": "2025-03-27", "dtDesligamento": null}, {"chapa": "6337", "nome": "VERISMAR JOSE LUIZ", "cpf": "026.758.691-47", "dtNascimento": "1987-07-04", "funcao": "TÉCNICO DE SEGURANÇA DO TRABALHO", "tipo": "A", "dtAdmissao": "2025-10-01", "dtInicioObra": "2025-10-01", "dtDesligamento": "2026-07-26"}], "folga": [{"chapa": "6505", "ciclos": [{"saidaPrevista": "2026-04-20", "saidaReal": "2026-04-21", "retornoReal": "2026-05-03"}, {"saidaPrevista": "2026-07-02", "saidaReal": "2026-07-09", "retornoReal": "2026-07-19"}, {"saidaPrevista": "2026-09-17", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6507", "ciclos": [{"saidaPrevista": "2026-04-13", "saidaReal": "2026-04-13", "retornoReal": "2026-04-25"}, {"saidaPrevista": "2026-06-24", "saidaReal": "2026-06-26", "retornoReal": "2026-07-05"}, {"saidaPrevista": "2026-09-03", "saidaReal": "2026-09-17", "retornoReal": null}]}, {"chapa": "5600", "ciclos": [{"saidaPrevista": "2026-05-29", "saidaReal": "2026-05-29", "retornoReal": "2026-06-10"}, {"saidaPrevista": "2026-06-19", "saidaReal": "2026-06-19", "retornoReal": "2026-06-27"}, {"saidaPrevista": "2026-08-26", "saidaReal": "2026-08-28", "retornoReal": null}]}, {"chapa": "6138", "ciclos": [{"saidaPrevista": "2026-05-28", "saidaReal": "2026-05-28", "retornoReal": "2026-06-10"}, {"saidaPrevista": "2026-08-09", "saidaReal": "2026-08-07", "retornoReal": "2026-08-17"}, {"saidaPrevista": "2026-10-16", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6238", "ciclos": [{"saidaPrevista": "2026-01-13", "saidaReal": null, "retornoReal": null}]}, {"chapa": "5735", "ciclos": [{"saidaPrevista": "2026-04-15", "saidaReal": "2026-07-03", "retornoReal": "2026-07-11"}, {"saidaPrevista": "2026-09-09", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6081", "ciclos": [{"saidaPrevista": "2026-04-03", "saidaReal": "2026-04-03", "retornoReal": "2026-04-15"}, {"saidaPrevista": "2026-06-14", "saidaReal": "2026-06-12", "retornoReal": "2026-06-20"}, {"saidaPrevista": "2026-08-19", "saidaReal": "2026-08-21", "retornoReal": null}]}, {"chapa": "5116", "ciclos": [{"saidaPrevista": "2026-05-15", "saidaReal": "2026-05-15", "retornoReal": "2026-05-23"}, {"saidaPrevista": "2026-07-22", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6284", "ciclos": [{"saidaPrevista": "2026-03-20", "saidaReal": "2026-03-20", "retornoReal": "2026-03-30"}, {"saidaPrevista": "2026-05-24", "saidaReal": "2026-05-29", "retornoReal": "2026-06-06"}, {"saidaPrevista": "2026-08-05", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6427", "ciclos": [{"saidaPrevista": "2026-04-16", "saidaReal": "2026-06-14", "retornoReal": "2026-04-28"}, {"saidaPrevista": "2026-06-27", "saidaReal": "2026-07-03", "retornoReal": "2026-07-11"}, {"saidaPrevista": "2026-09-09", "saidaReal": "2026-08-14", "retornoReal": null}]}, {"chapa": "6479", "ciclos": [{"saidaPrevista": "2026-04-03", "saidaReal": "2026-04-03", "retornoReal": "2026-04-15"}, {"saidaPrevista": "2026-06-14", "saidaReal": "2026-06-12", "retornoReal": "2026-06-20"}, {"saidaPrevista": "2026-08-19", "saidaReal": "2026-08-21", "retornoReal": null}]}, {"chapa": "6469", "ciclos": [{"saidaPrevista": "2026-04-20", "saidaReal": "2026-04-20", "retornoReal": "2026-05-04"}, {"saidaPrevista": "2026-07-03", "saidaReal": "2026-06-19", "retornoReal": "2026-06-27"}, {"saidaPrevista": "2026-08-26", "saidaReal": "2026-09-20", "retornoReal": null}]}, {"chapa": "6506", "ciclos": [{"saidaPrevista": "2026-04-13", "saidaReal": "2026-04-13", "retornoReal": "2026-04-25"}, {"saidaPrevista": "2026-06-24", "saidaReal": "2026-06-26", "retornoReal": "2026-06-04"}, {"saidaPrevista": "2026-08-03", "saidaReal": "2026-08-05", "retornoReal": null}]}, {"chapa": "6328", "ciclos": [{"saidaPrevista": "2025-11-22", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6072", "ciclos": [{"saidaPrevista": "2025-05-27", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6481", "ciclos": [{"saidaPrevista": "2026-04-02", "saidaReal": "2026-04-02", "retornoReal": "2026-04-14"}, {"saidaPrevista": "2026-06-13", "saidaReal": "2026-06-12", "retornoReal": "2026-06-20"}, {"saidaPrevista": "2026-08-19", "saidaReal": "2026-08-21", "retornoReal": null}]}, {"chapa": "5945", "ciclos": [{"saidaPrevista": "2026-06-26", "saidaReal": "2026-06-26", "retornoReal": null}, {"saidaPrevista": "2026-09-01", "saidaReal": "2026-07-27", "retornoReal": "2026-08-09"}, {"saidaPrevista": "2026-10-08", "saidaReal": null, "retornoReal": null}]}, {"chapa": "5976", "ciclos": [{"saidaPrevista": "2026-04-15", "saidaReal": "2026-04-15", "retornoReal": "2026-04-27"}, {"saidaPrevista": "2026-06-26", "saidaReal": "2026-07-10", "retornoReal": "2026-07-10"}, {"saidaPrevista": "2026-09-08", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6504", "ciclos": [{"saidaPrevista": "2026-04-20", "saidaReal": "2026-04-20", "retornoReal": "2026-05-02"}, {"saidaPrevista": "2026-07-01", "saidaReal": "2026-08-07", "retornoReal": null}, {"saidaPrevista": "2026-10-16", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6313", "ciclos": [{"saidaPrevista": "2025-10-24", "saidaReal": "2026-04-23", "retornoReal": "2026-05-04"}, {"saidaPrevista": "2026-07-03", "saidaReal": "2026-06-03", "retornoReal": "2026-07-11"}, {"saidaPrevista": "2026-09-09", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6300", "ciclos": [{"saidaPrevista": "2025-10-11", "saidaReal": "2026-04-03", "retornoReal": "2026-04-14"}, {"saidaPrevista": "2026-06-13", "saidaReal": "2026-06-19", "retornoReal": "2026-06-27"}, {"saidaPrevista": "2026-08-26", "saidaReal": "2026-08-28", "retornoReal": null}]}, {"chapa": "6483", "ciclos": [{"saidaPrevista": "2026-06-13", "saidaReal": "2026-04-13", "retornoReal": "2026-04-25"}, {"saidaPrevista": "2026-06-24", "saidaReal": "2026-06-24", "retornoReal": "2026-07-05"}, {"saidaPrevista": "2026-09-03", "saidaReal": null, "retornoReal": null}]}, {"chapa": "5703", "ciclos": [{"saidaPrevista": "2026-05-22", "saidaReal": "2026-05-22", "retornoReal": "2026-05-30"}, {"saidaPrevista": "2026-07-29", "saidaReal": "2026-08-07", "retornoReal": null}, {"saidaPrevista": "2026-10-13", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6283", "ciclos": [{"saidaPrevista": "2025-10-16", "saidaReal": "2026-06-12", "retornoReal": "2026-06-21"}, {"saidaPrevista": "2026-08-20", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6182", "ciclos": [{"saidaPrevista": "2025-08-02", "saidaReal": "2026-06-19", "retornoReal": "2026-06-27"}, {"saidaPrevista": "2026-08-26", "saidaReal": null, "retornoReal": null}, {"saidaPrevista": "2026-11-03", "saidaReal": null, "retornoReal": null}]}, {"chapa": "5747", "ciclos": [{"saidaPrevista": "2025-05-26", "saidaReal": null, "retornoReal": null}]}, {"chapa": "5429", "ciclos": [{"saidaPrevista": "2025-04-05", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6312", "ciclos": [{"saidaPrevista": "2025-10-11", "saidaReal": "2026-06-19", "retornoReal": "2026-06-29"}, {"saidaPrevista": "2026-08-28", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6331", "ciclos": [{"saidaPrevista": "2025-11-22", "saidaReal": "2026-06-21", "retornoReal": null}, {"saidaPrevista": "2026-08-27", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6305", "ciclos": [{"saidaPrevista": "2025-10-11", "saidaReal": "2026-06-12", "retornoReal": "2026-06-21"}, {"saidaPrevista": "2026-08-20", "saidaReal": "2026-08-21", "retornoReal": null}, {"saidaPrevista": "2026-10-27", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6320", "ciclos": [{"saidaPrevista": "2025-10-24", "saidaReal": "2026-06-26", "retornoReal": "2026-07-04"}, {"saidaPrevista": "2026-09-02", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6044", "ciclos": [{"saidaPrevista": "2026-04-16", "saidaReal": "2026-04-28", "retornoReal": "2026-04-28"}, {"saidaPrevista": "2026-07-27", "saidaReal": "2026-08-07", "retornoReal": null}, {"saidaPrevista": "2026-11-15", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6379", "ciclos": [{"saidaPrevista": "2025-12-07", "saidaReal": "2026-06-12", "retornoReal": "2026-06-20"}, {"saidaPrevista": "2026-08-19", "saidaReal": "2026-08-28", "retornoReal": null}, {"saidaPrevista": "2026-11-03", "saidaReal": null, "retornoReal": null}]}, {"chapa": "5961", "ciclos": [{"saidaPrevista": "2025-02-10", "saidaReal": "2026-06-26", "retornoReal": "2026-06-04"}, {"saidaPrevista": "2026-08-03", "saidaReal": "2026-06-26", "retornoReal": "2026-07-04"}, {"saidaPrevista": "2026-09-02", "saidaReal": null, "retornoReal": null}]}, {"chapa": "5752", "ciclos": [{"saidaPrevista": "2025-05-26", "saidaReal": "2026-07-12", "retornoReal": "2026-08-07"}, {"saidaPrevista": "2026-10-06", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6337", "ciclos": [{"saidaPrevista": "2025-11-30", "saidaReal": null, "retornoReal": null}]}, {"chapa": "6082", "ciclos": [{"saidaPrevista": "2026-06-19", "saidaReal": "2026-07-19", "retornoReal": null}]}], "passagens": [{"chapa": "6505", "cidade": "AGUA BRANCA/AL", "estado": "AL", "status": "EMITIDA"}, {"chapa": "6319", "cidade": "ASSU/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6143", "cidade": "CANDEIAS/BA", "estado": "BA", "status": "PENDENTE"}, {"chapa": "6507", "cidade": "BREJO SANTO/CE", "estado": "CE", "status": "EMITIDA"}, {"chapa": "5600", "cidade": "PAULO AFONSO/BA", "estado": "BA", "status": "EMITIDA"}, {"chapa": "6138", "cidade": "GUADALUPE/PI", "estado": "PI", "status": "EMITIDA"}, {"chapa": "6238", "cidade": "ASSU/RN", "estado": "RN", "status": "N/A"}, {"chapa": "5735", "cidade": "RIO DAS OSTRAS/RJ", "estado": "RJ", "status": "EMITIDA"}, {"chapa": "6081", "cidade": "JOAO CAMARA/RN", "estado": "RN", "status": "EMITIDA"}, {"chapa": "5116", "cidade": "TABULEIRO DO NORTE/CE", "estado": "CE", "status": "EMITIDA"}, {"chapa": "6284", "cidade": "REGENERACAO/PI", "estado": "PI", "status": "EMITIDA"}, {"chapa": "6427", "cidade": "SANTA CRUZ/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6479", "cidade": "ASSU/RN", "estado": "RN", "status": "EMITIDA"}, {"chapa": "5604", "cidade": "CANINDE DE SAO FRANCISCO/SE", "estado": "SE", "status": "PENDENTE"}, {"chapa": "6469", "cidade": "ASSU/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6506", "cidade": "PIRIPIRI/PI", "estado": "PI", "status": "PENDENTE"}, {"chapa": "6328", "cidade": "SANTA CRUZ/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6072", "cidade": "GOIANIA/GO", "estado": "GO", "status": "PENDENTE"}, {"chapa": "6481", "cidade": "ASSU/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "5945", "cidade": "ACAILANDIA/MA", "estado": "MA", "status": "PENDENTE"}, {"chapa": "5989", "cidade": "CACHOEIRAS DO MACACU/RJ", "estado": "RJ", "status": "PENDENTE"}, {"chapa": "5976", "cidade": "SAO GONCALO DO AMARANTE/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6504", "cidade": "CERRO CORA/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6313", "cidade": "SANTA RITA/MA", "estado": "MA", "status": "PENDENTE"}, {"chapa": "6300", "cidade": "CERRO CORA/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6483", "cidade": "ITAGIPE/CE", "estado": "CE", "status": "PENDENTE"}, {"chapa": "5703", "cidade": "RIO DE JANEIRO/RJ", "estado": "RJ", "status": "PENDENTE"}, {"chapa": "6283", "cidade": "MILAGRES/CE", "estado": "CE", "status": "PENDENTE"}, {"chapa": "6182", "cidade": "TABULEIRO DO NORTE/CE", "estado": "CE", "status": "PENDENTE"}, {"chapa": "5747", "cidade": "MINACU/GO", "estado": "GO", "status": "PENDENTE"}, {"chapa": "5429", "cidade": "JOAO PESSOA/PB", "estado": "PB", "status": "PENDENTE"}, {"chapa": "6312", "cidade": "CERRO CORA/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6331", "cidade": "SANTA RITA/MA", "estado": "MA", "status": "PENDENTE"}, {"chapa": "6305", "cidade": "TABULEIRO DO NORTE/CE", "estado": "CE", "status": "PENDENTE"}, {"chapa": "6320", "cidade": "ASSU/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6044", "cidade": "CERRO CORA/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6379", "cidade": "TOME ASSU/PA", "estado": "PA", "status": "PENDENTE"}, {"chapa": "5961", "cidade": "CAMPO REDONDO/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "5752", "cidade": "SANTA CRUZ/RN", "estado": "RN", "status": "PENDENTE"}, {"chapa": "6337", "cidade": "GOIANIA/GO", "estado": "GO", "status": "PENDENTE"}], "ferias": [{"chapa": "6505", "periodos": [{"fimPeriodo": "2027-01-11", "dataLimite": "2027-12-12", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6319", "periodos": [{"fimPeriodo": "2026-09-07", "dataLimite": "2027-08-08", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5975", "periodos": [{"fimPeriodo": "2026-02-18", "dataLimite": "2027-01-19", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6143", "periodos": [{"fimPeriodo": "2026-05-19", "dataLimite": "2027-04-19", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6507", "periodos": [{"fimPeriodo": "2027-01-11", "dataLimite": "2027-12-12", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6919", "periodos": [{"fimPeriodo": "2027-07-06", "dataLimite": "2028-06-07", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5600", "periodos": [{"fimPeriodo": "2026-01-02", "dataLimite": "2026-12-03", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6138", "periodos": [{"fimPeriodo": "2026-05-12", "dataLimite": "2027-04-12", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6238", "periodos": [{"fimPeriodo": "2026-07-20", "dataLimite": "2027-06-20", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5735", "periodos": [{"fimPeriodo": "2026-01-02", "dataLimite": "2026-12-03", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6081", "periodos": [{"fimPeriodo": "2026-04-01", "dataLimite": "2027-03-02", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "1553", "periodos": [{"fimPeriodo": "2019-08-19", "dataLimite": "2020-07-20", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6082", "periodos": [{"fimPeriodo": "2026-04-02", "dataLimite": "2027-03-03", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5116", "periodos": [{"fimPeriodo": "2026-01-15", "dataLimite": "2026-12-16", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6284", "periodos": [{"fimPeriodo": "2026-08-25", "dataLimite": "2027-07-26", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6987", "periodos": [{"fimPeriodo": "2027-07-23", "dataLimite": "2028-06-24", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6427", "periodos": [{"fimPeriodo": "2026-11-16", "dataLimite": "2027-10-17", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6479", "periodos": [{"fimPeriodo": "2027-01-04", "dataLimite": "2027-12-05", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5604", "periodos": [{"fimPeriodo": "2026-01-02", "dataLimite": "2026-12-03", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6469", "periodos": [{"fimPeriodo": "2026-12-17", "dataLimite": "2027-11-17", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6506", "periodos": [{"fimPeriodo": "2027-01-11", "dataLimite": "2027-12-12", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6328", "periodos": [{"fimPeriodo": "2026-09-22", "dataLimite": "2027-08-23", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6072", "periodos": [{"fimPeriodo": "2026-03-27", "dataLimite": "2027-02-25", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6481", "periodos": [{"fimPeriodo": "2027-01-04", "dataLimite": "2027-12-05", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5945", "periodos": [{"fimPeriodo": "2026-01-23", "dataLimite": "2026-12-24", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5989", "periodos": [{"fimPeriodo": "2027-03-02", "dataLimite": "2028-02-01", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5976", "periodos": [{"fimPeriodo": "2026-02-18", "dataLimite": "2027-01-19", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6504", "periodos": [{"fimPeriodo": "2027-01-11", "dataLimite": "2027-12-12", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6313", "periodos": [{"fimPeriodo": "2026-09-07", "dataLimite": "2027-08-08", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6300", "periodos": [{"fimPeriodo": "2026-09-04", "dataLimite": "2027-08-05", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6988", "periodos": [{"fimPeriodo": "2027-07-23", "dataLimite": "2028-06-24", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6483", "periodos": [{"fimPeriodo": "2027-01-04", "dataLimite": "2027-12-05", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5703", "periodos": [{"fimPeriodo": "2026-01-02", "dataLimite": "2026-12-03", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6283", "periodos": [{"fimPeriodo": "2026-08-24", "dataLimite": "2027-07-25", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6062", "periodos": [{"fimPeriodo": "2026-03-31", "dataLimite": "2027-03-01", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6182", "periodos": [{"fimPeriodo": "2026-06-01", "dataLimite": "2027-05-02", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5585", "periodos": [{"fimPeriodo": "2026-01-03", "dataLimite": "2026-12-04", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5747", "periodos": [{"fimPeriodo": "2025-07-25", "dataLimite": "2026-06-25", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5429", "periodos": [{"fimPeriodo": "2024-11-01", "dataLimite": "2025-10-02", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6312", "periodos": [{"fimPeriodo": "2026-09-04", "dataLimite": "2027-08-05", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6726", "periodos": [{"fimPeriodo": "2027-03-04", "dataLimite": "2028-02-05", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6696", "periodos": [{"fimPeriodo": "2027-02-12", "dataLimite": "2028-01-13", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6331", "periodos": [{"fimPeriodo": "2026-09-22", "dataLimite": "2027-08-23", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6305", "periodos": [{"fimPeriodo": "2026-09-04", "dataLimite": "2027-08-05", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6320", "periodos": [{"fimPeriodo": "2026-09-07", "dataLimite": "2027-08-08", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6044", "periodos": [{"fimPeriodo": "2026-03-24", "dataLimite": "2027-02-22", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6985", "periodos": [{"fimPeriodo": "2027-07-23", "dataLimite": "2028-06-24", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "6379", "periodos": [{"fimPeriodo": "2026-10-19", "dataLimite": "2027-09-19", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5961", "periodos": [{"fimPeriodo": "2026-02-09", "dataLimite": "2027-01-10", "gozoInicio": null, "gozoFim": null}]}, {"chapa": "5752", "periodos": [{"fimPeriodo": "2025-08-04", "dataLimite": "2026-07-05", "gozoInicio": "2026-07-13", "gozoFim": "2026-07-30"}]}], "ajudacusto": [], "alojamentos": [{"id": "aloj-01-jataí", "nome": "Alojamento 01 — Jataí", "capacidade": 10, "endereco": "Rua Dep. Manoel da Costa Lima, 859 – Centro – Jataí/GO", "moradores": ["6143", "5735", "5976", "5961"], "itens": []}, {"id": "aloj-02", "nome": "Alojamento 02", "capacidade": 15, "endereco": "Rua José Geda 295 Setor Antena", "moradores": ["6284", "5989", "6283", "5752"], "itens": []}], "salarial": [{"chapa": "3100", "salarioBase": 3090.85, "ajustes": []}, {"chapa": "6505", "salarioBase": 1889.94, "ajustes": []}, {"chapa": "6319", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "6143", "salarioBase": 3000.0, "ajustes": []}, {"chapa": "778", "salarioBase": 3090.85, "ajustes": []}, {"chapa": "6507", "salarioBase": 1889.94, "ajustes": []}, {"chapa": "780", "salarioBase": 4280.3, "ajustes": []}, {"chapa": "5600", "salarioBase": 2883.6, "ajustes": []}, {"chapa": "6138", "salarioBase": 1889.94, "ajustes": []}, {"chapa": "6238", "salarioBase": 3229.05, "ajustes": []}, {"chapa": "5735", "salarioBase": 3066.8, "ajustes": []}, {"chapa": "6081", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "6262", "salarioBase": 3066.8, "ajustes": []}, {"chapa": "5562", "salarioBase": 2513.91, "ajustes": []}, {"chapa": "6082", "salarioBase": 2513.91, "ajustes": []}, {"chapa": "5116", "salarioBase": 5513.94, "ajustes": []}, {"chapa": "6284", "salarioBase": 3066.8, "ajustes": []}, {"chapa": "6427", "salarioBase": 1889.94, "ajustes": []}, {"chapa": "6479", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "5604", "salarioBase": 2948.0, "ajustes": []}, {"chapa": "6469", "salarioBase": 1889.94, "ajustes": []}, {"chapa": "6506", "salarioBase": 1889.94, "ajustes": []}, {"chapa": "6328", "salarioBase": 2650.0, "ajustes": []}, {"chapa": "6072", "salarioBase": 4800.0, "ajustes": []}, {"chapa": "6481", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "5945", "salarioBase": 2066.01, "ajustes": []}, {"chapa": "5989", "salarioBase": 4500.0, "ajustes": []}, {"chapa": "5976", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "6504", "salarioBase": 2140.78, "ajustes": []}, {"chapa": "6313", "salarioBase": 2066.01, "ajustes": []}, {"chapa": "6300", "salarioBase": 3229.05, "ajustes": []}, {"chapa": "6483", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "5703", "salarioBase": 2809.0, "ajustes": []}, {"chapa": "6283", "salarioBase": 3066.8, "ajustes": []}, {"chapa": "6182", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "5585", "salarioBase": 2066.01, "ajustes": []}, {"chapa": "5747", "salarioBase": 3229.05, "ajustes": []}, {"chapa": "5429", "salarioBase": 7832.0, "ajustes": []}, {"chapa": "6312", "salarioBase": 4500.0, "ajustes": []}, {"chapa": "6137", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "6475", "salarioBase": 2978.7, "ajustes": []}, {"chapa": "6331", "salarioBase": 1889.94, "ajustes": []}, {"chapa": "6237", "salarioBase": 2650.0, "ajustes": []}, {"chapa": "6461", "salarioBase": 1889.94, "ajustes": []}, {"chapa": "6305", "salarioBase": 3229.05, "ajustes": []}, {"chapa": "6320", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "6044", "salarioBase": 2650.0, "ajustes": []}, {"chapa": "6379", "salarioBase": 1889.94, "ajustes": []}, {"chapa": "5961", "salarioBase": 2369.4, "ajustes": []}, {"chapa": "5752", "salarioBase": 3066.8, "ajustes": []}, {"chapa": "6337", "salarioBase": 4800.0, "ajustes": []}]};
+
+const K = {
+  EFETIVO:'adm-efetivo', FOLGA:'adm-folga', PASSAGENS:'adm-passagens',
+  FERIAS:'adm-ferias', AJUDACUSTO:'adm-ajudacusto', ALOJAMENTOS:'adm-alojamentos',
+  SALARIAL:'adm-salarial', PARAMETROS:'adm-parametros'
+};
+
+const DEFAULT_PARAMS = {
+  cicloA:60, folgaA:7, cicloB:90, folgaB:10,
+  alertaFolgaVermelho:5, alertaFolgaAmarelo:15,
+  alertaCritico:10, alertaAmarelo:25,
+  alertaFeriasUrgente:30, alertaFeriasVencendo:60,
+  editPassword:'Enerwatt21@',
+  appName:'ADM DE OBRAS ENERWATT'
+};
+
+const FUNCOES = ['SERVENTE','PEDREIRO','ELETRICISTA II','ELETRICISTA MONTADOR','MONTADOR ELETROMECANICO',
+  'ENCARREGADO DE OBRA','ENCARREGADO DE MONTAGEM','ENCARREGADO DE MONTAGEM ELETROMECANICA','MOTORISTA',
+  'MOTORISTA OPERADOR DE MUNCK','OPERADOR DE RETROESCAVADEIRA','OPERADOR DE BETONEIRA','MESTRE DE OBRAS',
+  'ARMADOR','CARPINTEIRO','TÉCNICO DE SEGURANÇA DO TRABALHO','ALMOXARIFE I','MONTADOR'];
+
+const NAV_ITEMS = [
+  {id:'dashboard', label:'Dashboard', icon:'◈'},
+  {id:'efetivo', label:'Efetivo', icon:'☰'},
+  {id:'folga', label:'Folga de Campo', icon:'⟲'},
+  {id:'passagens', label:'Passagens', icon:'✈'},
+  {id:'ferias', label:'Férias', icon:'☀'},
+  {id:'ajudacusto', label:'Ajuda de Custo', icon:'$'},
+  {id:'alojamentos', label:'Alojamentos', icon:'⌂'},
+  {id:'salarial', label:'Base Salarial', icon:'▤'},
+  {id:'parametros', label:'Parâmetros', icon:'⚙'},
+];
+
+/* ---------- ESTADO ---------- */
+let STATE = {
+  efetivo:[], folga:[], passagens:[], ferias:[], ajudacusto:[], alojamentos:[], salarial:[],
+  params: {...DEFAULT_PARAMS},
+  editUnlocked: false
+};
+let ROUTE = 'dashboard';
+let TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+/* ---------- UTIL: DATAS ---------- */
+function parseDate(s){ if(!s) return null; const [y,m,d]=s.split('-').map(Number); if(!y) return null; const dt=new Date(y,m-1,d); dt.setHours(0,0,0,0); return dt; }
+function toISO(d){ if(!d) return ''; const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+function fmtDate(d){ if(!d) return '—'; if(typeof d === 'string') d = parseDate(d); if(!d) return '—'; const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0'),yy=d.getFullYear(); return `${dd}/${mm}/${yy}`; }
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function addMonths(d,n){ const r=new Date(d); r.setMonth(r.getMonth()+n); return r; }
+function diffDays(a,b){ return Math.round((a-b)/86400000); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s){ return (s===undefined||s===null) ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function withFocusPreserved(fn){
+  const active = document.activeElement;
+  const wasSearch = active && active.id === 'searchInput';
+  const cursorPos = wasSearch ? active.selectionStart : null;
+  fn();
+  if(wasSearch){
+    const el = document.getElementById('searchInput');
+    if(el){ el.focus(); try{ el.setSelectionRange(cursorPos,cursorPos); }catch(e){} }
+  }
+}
+
+
+/* ---------- STORAGE ---------- */
+async function loadAll(){
+  const keys = Object.values(K);
+  for(const key of keys){
+    try{
+      if(!window.storage) throw new Error('window.storage indisponível neste ambiente');
+      const res = await window.storage.get(key, true); // shared = todo mundo com o link vê os mesmos dados
+      const val = res ? JSON.parse(res.value) : null;
+      applyLoaded(key, val);
+    }catch(e){ applyLoaded(key, null); }
+  }
+  // Fallback: se não há dados salvos (primeira vez, ou site publicado fora do
+  // Claude sem window.storage), usa os dados importados da planilha.
+  if(STATE.efetivo.length===0 && SEED_DATA.efetivo) STATE.efetivo = SEED_DATA.efetivo;
+  if(STATE.folga.length===0 && SEED_DATA.folga) STATE.folga = SEED_DATA.folga;
+  if(STATE.passagens.length===0 && SEED_DATA.passagens) STATE.passagens = SEED_DATA.passagens;
+  if(STATE.ferias.length===0 && SEED_DATA.ferias) STATE.ferias = SEED_DATA.ferias;
+  if(STATE.ajudacusto.length===0 && SEED_DATA.ajudacusto) STATE.ajudacusto = SEED_DATA.ajudacusto;
+  if(STATE.alojamentos.length===0 && SEED_DATA.alojamentos) STATE.alojamentos = SEED_DATA.alojamentos;
+  if(STATE.salarial.length===0 && SEED_DATA.salarial) STATE.salarial = SEED_DATA.salarial;
+}
+function applyLoaded(key, val){
+  switch(key){
+    case K.EFETIVO: STATE.efetivo = val || []; break;
+    case K.FOLGA: STATE.folga = val || []; break;
+    case K.PASSAGENS: STATE.passagens = val || []; break;
+    case K.FERIAS: STATE.ferias = val || []; break;
+    case K.AJUDACUSTO: STATE.ajudacusto = val || []; break;
+    case K.ALOJAMENTOS: STATE.alojamentos = val || []; break;
+    case K.SALARIAL: STATE.salarial = val || []; break;
+    case K.PARAMETROS: STATE.params = val ? {...DEFAULT_PARAMS, ...val} : {...DEFAULT_PARAMS}; break;
+  }
+}
+async function persist(key, value){
+  try{
+    if(!window.storage) throw new Error('sem storage');
+    const r = await window.storage.set(key, JSON.stringify(value), true); // shared = todo mundo com o link vê os mesmos dados
+    if(!r) throw new Error('sem resposta do storage');
+    return true;
+  }catch(e){
+    toast('Não consegui salvar — este site publicado não tem conexão com o armazenamento (fora do Claude). As edições ficam só nesta aba até a página ser recarregada.', 'err');
+    return false;
+  }
+}
+async function saveEfetivo(){ if(await persist(K.EFETIVO, STATE.efetivo)) toast('Efetivo atualizado.'); render(); }
+async function saveFolga(){ if(await persist(K.FOLGA, STATE.folga)) toast('Folga de campo atualizada.'); render(); }
+async function savePassagens(){ if(await persist(K.PASSAGENS, STATE.passagens)) toast('Passagem atualizada.'); render(); }
+async function saveFerias(){ if(await persist(K.FERIAS, STATE.ferias)) toast('Férias atualizadas.'); render(); }
+async function saveAjudaCusto(){ if(await persist(K.AJUDACUSTO, STATE.ajudacusto)) toast('Ajuda de custo atualizada.'); render(); }
+async function saveAlojamentos(){ if(await persist(K.ALOJAMENTOS, STATE.alojamentos)) toast('Alojamento atualizado.'); render(); }
+async function saveSalarial(){ if(await persist(K.SALARIAL, STATE.salarial)) toast('Base salarial atualizada.'); render(); }
+async function saveParametros(){ if(await persist(K.PARAMETROS, STATE.params)) toast('Parâmetros salvos.'); render(); }
+
+/* ---------- TOAST ---------- */
+function canEdit(){ return STATE.editUnlocked; }
+
+function requireEdit(){
+  if(!STATE.editUnlocked){ toast('Desbloqueie a edição primeiro (cadeado no menu).', 'err'); return false; }
+  return true;
+}
+
+function promptUnlock(){
+  const body = `
+    <div class="field">
+      <label>Senha de edição</label>
+      <input id="f_unlockPw" type="password" placeholder="digite a senha" onkeydown="if(event.key==='Enter') submitUnlock()">
+    </div>
+    <div class="hint" style="margin-top:8px;">Sem a senha, dá pra ver tudo normalmente — só não dá pra cadastrar ou alterar nada.</div>
+  `;
+  const foot = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="submitUnlock()">Entrar</button>`;
+  openModal('🔒 Desbloquear edição', body, foot);
+  setTimeout(()=>{ const el=document.getElementById('f_unlockPw'); if(el) el.focus(); }, 50);
+}
+function submitUnlock(){
+  const pw = val('f_unlockPw');
+  if(pw === STATE.params.editPassword){
+    STATE.editUnlocked = true;
+    closeModal();
+    toast('Edição liberada.');
+    render();
+  } else {
+    toast('Senha incorreta.', 'err');
+  }
+}
+function lockEdit(){
+  STATE.editUnlocked = false;
+  toast('Modo visualização ativado.');
+  render();
+}
+
+function toast(msg, type='ok'){
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==='ok'?'✓':'⚠'}</span><span>${esc(msg)}</span>`;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .25s'; setTimeout(()=>el.remove(),250); }, 2600);
+}
+
+/* ============================================================
+   MOTOR DE CICLOS — FOLGA DE CAMPO
+   Gera automaticamente o ciclo seguinte assim que o anterior é
+   concluído. Não existe limite de ciclos (3, 6, ou o que for).
+   ============================================================ */
+function getFolgaRecord(chapa){ return STATE.folga.find(f=>f.chapa===chapa); }
+function cicloDuracao(tipo){ return tipo==='B' ? {ciclo:STATE.params.cicloB, folga:STATE.params.folgaB} : {ciclo:STATE.params.cicloA, folga:STATE.params.folgaA}; }
+
+function getActiveCycle(emp){
+  const rec = getFolgaRecord(emp.chapa);
+  const {ciclo:diasCiclo, folga:diasFolga} = cicloDuracao(emp.tipo);
+  const ciclos = (rec && rec.ciclos) || [];
+  const base = parseDate(emp.dtInicioObra);
+  if(!base) return {numero:1, sp:null, sr:null, rp:null, rr:null, virtual:true};
+
+  if(ciclos.length===0){
+    return {numero:1, sp:addDays(base,diasCiclo), sr:null, rp:null, rr:null, virtual:true};
+  }
+  const last = ciclos[ciclos.length-1];
+  const lastRR = last.retornoReal ? parseDate(last.retornoReal) : null;
+  if(lastRR && TODAY>=lastRR){
+    return {numero:ciclos.length+1, sp:addDays(lastRR,diasCiclo), sr:null, rp:null, rr:null, virtual:true};
+  }
+  const sr = last.saidaReal ? parseDate(last.saidaReal) : null;
+  return {
+    numero: ciclos.length,
+    sp: last.saidaPrevista ? parseDate(last.saidaPrevista) : null,
+    sr: sr,
+    rp: sr ? addDays(sr, diasFolga) : null,
+    rr: last.retornoReal ? parseDate(last.retornoReal) : null,
+    virtual:false, index:ciclos.length-1
+  };
+}
+
+function computeFolgaStatus(cycle){
+  const {sp,sr,rp,rr} = cycle;
+  if(sr && TODAY>=sr){
+    if(rr && TODAY>=rr) return 'CONCLUIDA';
+    if(!rr && rp && TODAY>rp) return 'RETORNO_ATRASADO';
+    return 'EM_FOLGA';
+  }
+  if(sr && TODAY<sr) return 'SAIDA_AGENDADA';
+  if(sp && TODAY>sp) return 'FOLGA_ATRASADA';
+  if(sp && diffDays(sp,TODAY)<=STATE.params.alertaFolgaVermelho) return 'FOLGA_URGENTE';
+  if(sp && diffDays(sp,TODAY)<=STATE.params.alertaFolgaAmarelo) return 'FOLGA_PROXIMA';
+  return 'EM_DIA';
+}
+
+const FOLGA_META = {
+  EM_DIA:          {label:'Em dia',              color:'green',  icon:'✓'},
+  FOLGA_PROXIMA:   {label:'Alerta — se aproximando', color:'yellow', icon:'◔'},
+  FOLGA_URGENTE:   {label:'Urgente — vence em breve', color:'red',   icon:'!'},
+  FOLGA_ATRASADA:  {label:'Folga atrasada',       color:'red',    icon:'!'},
+  SAIDA_AGENDADA:  {label:'Saída agendada',       color:'blue',   icon:'▸'},
+  EM_FOLGA:        {label:'Em folga',             color:'yellow', icon:'⟲'},
+  RETORNO_ATRASADO:{label:'Retorno atrasado',     color:'red',    icon:'!'},
+  CONCLUIDA:       {label:'Concluída',            color:'gray',   icon:'✓'},
+};
+
+/* ============================================================
+   MOTOR DE PASSAGENS — deriva da folga de campo
+   ============================================================ */
+function getPassagemInfo(chapa){ return STATE.passagens.find(p=>p.chapa===chapa) || {}; }
+
+function computePassagemStatus(cycle, manual){
+  if(cycle.sr) return {level:'green', label:'Emitida (já registrada na folga)'};
+  if(manual.status==='EMITIDA') return {level:'green', label:'Emitida'};
+  if(manual.status==='SOLICITADA') return {level:'green', label:'Solicitada'};
+  if(!cycle.sp) return {level:'gray', label:'Sem previsão'};
+  const dias = diffDays(cycle.sp, TODAY);
+  if(dias<=STATE.params.alertaCritico) return {level:'red', label: dias<0 ? `Atrasada ${Math.abs(dias)}d` : 'Urgente'};
+  if(dias<=STATE.params.alertaAmarelo) return {level:'yellow', label:'Solicitar'};
+  return {level:'green', label:'No prazo'};
+}
+
+/* ============================================================
+   MOTOR DE CICLOS — FÉRIAS (mesmo princípio da folga)
+   ============================================================ */
+function getFeriasRecord(chapa){ return STATE.ferias.find(f=>f.chapa===chapa); }
+
+function getActivePeriodo(emp){
+  const rec = getFeriasRecord(emp.chapa);
+  const periodos = (rec && rec.periodos) || [];
+  const admissao = parseDate(emp.dtAdmissao);
+  if(!admissao) return {numero:1, fimPeriodo:null, dataLimite:null, gozoInicio:null, gozoFim:null, virtual:true};
+
+  if(periodos.length===0){
+    const fimPeriodo = addMonths(admissao,12);
+    const dataLimite = addMonths(fimPeriodo,11);
+    return {numero:1, fimPeriodo, dataLimite, gozoInicio:null, gozoFim:null, virtual:true};
+  }
+  const last = periodos[periodos.length-1];
+  const lastGF = last.gozoFim ? parseDate(last.gozoFim) : null;
+  if(lastGF && TODAY>=lastGF){
+    const fimPeriodo = addMonths(parseDate(last.fimPeriodo),12);
+    const dataLimite = addMonths(fimPeriodo,11);
+    return {numero:periodos.length+1, fimPeriodo, dataLimite, gozoInicio:null, gozoFim:null, virtual:true};
+  }
+  return {
+    numero:periodos.length,
+    fimPeriodo: parseDate(last.fimPeriodo), dataLimite: parseDate(last.dataLimite),
+    gozoInicio: last.gozoInicio?parseDate(last.gozoInicio):null, gozoFim: last.gozoFim?parseDate(last.gozoFim):null,
+    virtual:false, index:periodos.length-1
+  };
+}
+
+function computeFeriasStatus(periodo){
+  const {dataLimite, gozoInicio, gozoFim} = periodo;
+  if(gozoFim && TODAY>=gozoFim) return 'CONCLUIDA';
+  if(gozoInicio && TODAY>=gozoInicio && (!gozoFim || TODAY<gozoFim)) return 'EM_GOZO';
+  if(gozoInicio && TODAY<gozoInicio) return 'GOZO_AGENDADO';
+  if(!dataLimite) return 'EM_DIA';
+  const dias = diffDays(dataLimite, TODAY);
+  if(dias<0) return 'VENCIDA';
+  if(dias<=STATE.params.alertaFeriasUrgente) return 'URGENTE';
+  if(dias<=STATE.params.alertaFeriasVencendo) return 'VENCENDO';
+  return 'EM_DIA';
+}
+
+const FERIAS_META = {
+  EM_DIA:        {label:'Em dia',       color:'green'},
+  VENCENDO:      {label:'Vencendo',     color:'yellow'},
+  URGENTE:       {label:'Urgente',      color:'red'},
+  VENCIDA:       {label:'Vencida',      color:'red'},
+  GOZO_AGENDADO: {label:'Gozo agendado',color:'blue'},
+  EM_GOZO:       {label:'Em gozo',      color:'yellow'},
+  CONCLUIDA:     {label:'Concluída',    color:'gray'},
+};
+
+function empAtivo(emp){ return !emp.dtDesligamento || parseDate(emp.dtDesligamento) > TODAY; }
+function getEmp(chapa){ return STATE.efetivo.find(e=>String(e.chapa)===String(chapa)); }
+
+/* ---------- COMPONENTES DE UI ---------- */
+function chip(color, label, icon){
+  return `<span class="chip chip-${color}">${icon?`<span>${icon}</span>`:'<span class="dot"></span>'}${esc(label)}</span>`;
+}
+function kpi(label, value, foot, color){
+  return `<div class="kpi" style="--kpi-color:var(--${color||'accent'})">
+    <div class="kpi-label">${esc(label)}</div>
+    <div class="kpi-value">${esc(value)}</div>
+    ${foot?`<div class="kpi-foot">${foot}</div>`:''}
+  </div>`;
+}
+function diasChip(dias){
+  const p = STATE.params;
+  let color = 'green';
+  if(dias<0) color='red';
+  else if(dias<=p.alertaFolgaVermelho) color='red';
+  else if(dias<=p.alertaFolgaAmarelo) color='yellow';
+  const label = dias<0 ? `${Math.abs(dias)}d atrasado` : `${dias}d`;
+  return `<span class="chip chip-${color}"><span class="dot"></span>${label}</span>`;
+}
+function emptyState(icon, text){
+  return `<div class="empty-state"><div class="big">${icon}</div><div>${esc(text)}</div></div>`;
+}
+
+function openModal(title, bodyHtml, footHtml){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="modal-head">
+          <div class="modal-title">${esc(title)}</div>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">${bodyHtml}</div>
+        ${footHtml? `<div class="modal-foot">${footHtml}</div>` : ''}
+      </div>
+    </div>`;
+  document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') closeModal(); });
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
+
+function field(label, inputHtml, span2, hint){
+  return `<div class="field ${span2?'span2':''}"><label>${esc(label)}</label>${inputHtml}${hint?`<div class="hint">${hint}</div>`:''}</div>`;
+}
+function inp(id, type, value, placeholder){
+  return `<input id="${id}" type="${type||'text'}" value="${esc(value||'')}" placeholder="${esc(placeholder||'')}">`;
+}
+function sel(id, options, value){
+  return `<select id="${id}">${options.map(o=>{
+    const val = typeof o==='object'? o.value : o;
+    const lab = typeof o==='object'? o.label : o;
+    return `<option value="${esc(val)}" ${String(val)===String(value)?'selected':''}>${esc(lab)}</option>`;
+  }).join('')}</select>`;
+}
+function val(id){ const el=document.getElementById(id); return el? el.value.trim() : ''; }
+
+function tableSkeleton(headers, rows){
+  return `<div class="table-wrap"><table>
+    <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.length? rows.join('') : `<tr><td colspan="${headers.length}">${emptyState('—','Nenhum registro ainda.')}</td></tr>`}</tbody>
+  </table></div>`;
+}
+
+/* ============================================================
+   PÁGINA: DASHBOARD
+   ============================================================ */
+function heroSvg(){
+  return `<svg viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#12151f"/>
+        <stop offset="100%" stop-color="#0a0c13"/>
+      </linearGradient>
+      <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#e8722a" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="#e8722a" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#171b26"/>
+        <stop offset="100%" stop-color="#0d0f16"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="1200" height="220" fill="url(#skyGrad)"/>
+    <circle cx="960" cy="70" r="150" fill="url(#sunGlow)"/>
+    <circle cx="960" cy="70" r="26" fill="#e8722a" opacity="0.85"/>
+
+    <!-- power lines between towers -->
+    <path d="M 90 90 Q 260 150 430 95" stroke="#3a4156" stroke-width="2" fill="none"/>
+    <path d="M 90 100 Q 260 158 430 105" stroke="#3a4156" stroke-width="2" fill="none"/>
+    <path d="M 470 95 Q 620 145 770 100" stroke="#3a4156" stroke-width="2" fill="none"/>
+    <path d="M 470 105 Q 620 153 770 110" stroke="#3a4156" stroke-width="2" fill="none"/>
+
+    <!-- ground -->
+    <rect x="0" y="188" width="1200" height="32" fill="url(#groundGrad)"/>
+    <rect x="0" y="187" width="1200" height="2" fill="#e8722a" opacity="0.35"/>
+
+    <!-- transmission tower 1 -->
+    <g stroke="#4a5268" stroke-width="2.5" fill="none" stroke-linecap="round">
+      <path d="M60 190 L90 40 L120 190"/>
+      <path d="M67 165 L113 165"/>
+      <path d="M72 138 L108 138"/>
+      <path d="M77 112 L103 112"/>
+      <path d="M60 190 L120 40"/>
+      <path d="M120 190 L60 40"/>
+      <path d="M90 40 L60 62 M90 40 L120 62"/>
+      <path d="M55 55 L125 55" stroke-width="3"/>
+    </g>
+
+    <!-- transmission tower 2 (taller, further) -->
+    <g stroke="#4a5268" stroke-width="2.5" fill="none" stroke-linecap="round">
+      <path d="M400 190 L432 25 L464 190"/>
+      <path d="M407 160 L457 160"/>
+      <path d="M412 130 L452 130"/>
+      <path d="M418 100 L446 100"/>
+      <path d="M400 190 L464 25"/>
+      <path d="M464 190 L400 25"/>
+      <path d="M432 25 L400 48 M432 25 L464 48"/>
+      <path d="M395 40 L469 40" stroke-width="3"/>
+    </g>
+
+    <!-- transmission tower 3 -->
+    <g stroke="#4a5268" stroke-width="2.5" fill="none" stroke-linecap="round">
+      <path d="M735 190 L764 55 L793 190"/>
+      <path d="M741 168 L787 168"/>
+      <path d="M746 143 L782 143"/>
+      <path d="M764 55 L738 76 M764 55 L790 76"/>
+      <path d="M733 68 L795 68" stroke-width="3"/>
+    </g>
+
+    <!-- substation: transformer + bushings + fence -->
+    <g>
+      <rect x="850" y="150" width="90" height="42" rx="3" fill="#171b26" stroke="#4a5268" stroke-width="2"/>
+      <path d="M865 150 L865 130 M865 130 L858 122 M865 130 L872 122" stroke="#4a5268" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M895 150 L895 128 M895 128 L888 120 M895 128 L902 120" stroke="#4a5268" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M925 150 L925 132 M925 132 L918 124 M925 132 L932 124" stroke="#4a5268" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="865" cy="118" r="3" fill="#e8722a" opacity="0.8"/>
+      <circle cx="895" cy="116" r="3" fill="#e8722a" opacity="0.8"/>
+      <circle cx="925" cy="120" r="3" fill="#e8722a" opacity="0.8"/>
+      <path d="M840 192 L840 160 L975 160 L975 192" stroke="#333a4d" stroke-width="1.5" fill="none"/>
+      <path d="M845 160 L845 192 M860 160 L860 192 M970 160 L970 192 M955 160 L955 192" stroke="#2a3040" stroke-width="1"/>
+    </g>
+
+    <!-- solar panel array -->
+    <g>
+      <g transform="translate(1010,150) rotate(-18)">
+        <rect x="0" y="0" width="150" height="34" rx="2" fill="#1c2130" stroke="#e8722a" stroke-width="1.5" opacity="0.9"/>
+        <path d="M25 0 L25 34 M50 0 L50 34 M75 0 L75 34 M100 0 L100 34 M125 0 L125 34" stroke="#e8722a" stroke-width="0.75" opacity="0.5"/>
+        <path d="M0 17 L150 17" stroke="#e8722a" stroke-width="0.75" opacity="0.5"/>
+      </g>
+      <path d="M1010 184 L998 192 M1150 116 L1162 192" stroke="#4a5268" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+  </svg>`;
+}
+
+function renderDashboard(){
+  const ativos = STATE.efetivo.filter(empAtivo);
+  const totalEf = STATE.efetivo.length;
+
+  // folga
+  let folgaCounts = {EM_DIA:0,FOLGA_PROXIMA:0,FOLGA_URGENTE:0,FOLGA_ATRASADA:0,SAIDA_AGENDADA:0,EM_FOLGA:0,RETORNO_ATRASADO:0};
+  let folgaAlerts = [];
+  ativos.forEach(e=>{
+    const c = getActiveCycle(e);
+    const st = computeFolgaStatus(c);
+    if(folgaCounts[st]!==undefined) folgaCounts[st]++;
+    if(st==='FOLGA_ATRASADA'||st==='RETORNO_ATRASADO'||st==='FOLGA_URGENTE') folgaAlerts.push({emp:e, status:st, cycle:c});
+  });
+
+  // passagens
+  let passRed=0, passYellow=0, passGreen=0;
+  ativos.forEach(e=>{
+    const c = getActiveCycle(e);
+    const p = computePassagemStatus(c, getPassagemInfo(e.chapa));
+    if(p.level==='red') passRed++; else if(p.level==='yellow') passYellow++; else passGreen++;
+  });
+
+  // ferias
+  let feriasCounts = {EM_DIA:0,VENCENDO:0,URGENTE:0,VENCIDA:0};
+  let feriasAlerts = [];
+  ativos.forEach(e=>{
+    const p = getActivePeriodo(e);
+    const st = computeFeriasStatus(p);
+    if(feriasCounts[st]!==undefined) feriasCounts[st]++;
+    if(st==='URGENTE'||st==='VENCIDA') feriasAlerts.push({emp:e, status:st, periodo:p});
+  });
+
+  // ajuda de custo pendentes
+  const ajudaPendente = STATE.ajudacusto.filter(a=>a.status==='PENDENTE').length;
+
+  // alojamentos
+  const totalVagas = STATE.alojamentos.reduce((s,a)=>s+(Number(a.capacidade)||0),0);
+  const totalOcupadas = STATE.alojamentos.reduce((s,a)=>s+((a.moradores||[]).length),0);
+
+  const html = `
+    <div class="hero-banner">
+      ${heroSvg()}
+      <div class="hero-overlay">
+        <div class="hero-title">${esc(STATE.params.appName || 'ADM DE OBRAS ENERWATT')}</div>
+        <div class="hero-sub">Projeto Âncora · Enerwatt Engenharia</div>
+      </div>
+    </div>
+    <div class="topbar">
+      <div><div class="page-title">Dashboard</div><div class="page-sub">Visão geral do ADM — Projeto Âncora</div></div>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:18px;">
+      ${kpi('Efetivo ativo', ativos.length, `${totalEf-ativos.length} desligados de ${totalEf} no total`, 'accent')}
+      ${kpi('Folga vencendo/atrasada', folgaCounts.FOLGA_ATRASADA + folgaCounts.RETORNO_ATRASADO + folgaCounts.FOLGA_URGENTE, `${folgaCounts.FOLGA_PROXIMA} em alerta amarelo`, 'red')}
+      ${kpi('Passagens urgentes', passRed, `${passYellow} a solicitar em breve`, 'yellow')}
+      ${kpi('Férias vencidas/urgentes', feriasCounts.VENCIDA + feriasCounts.URGENTE, `${feriasCounts.VENCENDO} vencendo`, 'red')}
+    </div>
+
+    <div class="grid grid-2">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">⟲ Folga de campo <span class="cnt">${ativos.length} colaboradores</span></div></div>
+        ${statusBarList([
+          ['Em dia', folgaCounts.EM_DIA, 'green'],
+          ['Alerta amarelo (se aproximando)', folgaCounts.FOLGA_PROXIMA, 'yellow'],
+          ['Saída agendada', folgaCounts.SAIDA_AGENDADA, 'blue'],
+          ['Em folga', folgaCounts.EM_FOLGA, 'yellow'],
+          ['Urgente (vence em breve)', folgaCounts.FOLGA_URGENTE, 'red'],
+          ['Folga atrasada', folgaCounts.FOLGA_ATRASADA, 'red'],
+          ['Retorno atrasado', folgaCounts.RETORNO_ATRASADO, 'red'],
+        ], ativos.length)}
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">✈ Passagens</div></div>
+        ${statusBarList([
+          ['No prazo / emitida', passGreen, 'green'],
+          ['Solicitar', passYellow, 'yellow'],
+          ['Urgente', passRed, 'red'],
+        ], ativos.length)}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">🔴 Alertas — precisa agir</div></div>
+      ${(folgaAlerts.length+feriasAlerts.length+ajudaPendente)===0 ? emptyState('✓','Nada pendente no momento.') : `
+        <div class="table-wrap"><table><tbody>
+        ${folgaAlerts.map(a=>`<tr>
+          <td><span class="chip chip-red">FOLGA</span></td>
+          <td class="mono">${esc(a.emp.chapa)}</td>
+          <td>${esc(a.emp.nome)}</td>
+          <td>${chip(FOLGA_META[a.status].color, FOLGA_META[a.status].label)}</td>
+          <td class="text-faint">ciclo ${a.cycle.numero}</td>
+        </tr>`).join('')}
+        ${feriasAlerts.map(a=>`<tr>
+          <td><span class="chip chip-red">FÉRIAS</span></td>
+          <td class="mono">${esc(a.emp.chapa)}</td>
+          <td>${esc(a.emp.nome)}</td>
+          <td>${chip(FERIAS_META[a.status].color, FERIAS_META[a.status].label)}</td>
+          <td class="text-faint">limite ${fmtDate(a.periodo.dataLimite)}</td>
+        </tr>`).join('')}
+        ${STATE.ajudacusto.filter(a=>a.status==='PENDENTE').map(a=>`<tr>
+          <td><span class="chip chip-yellow">AJUDA DE CUSTO</span></td>
+          <td class="mono">${esc(a.chapa)}</td>
+          <td>${esc((getEmp(a.chapa)||{}).nome||'—')}</td>
+          <td>${chip('yellow','Pendente')}</td>
+          <td class="text-faint">${esc(a.competencia||'')}</td>
+        </tr>`).join('')}
+        </tbody></table></div>
+      `}
+    </div>
+
+    <div class="grid grid-3">
+      ${kpi('Vagas de alojamento', `${totalOcupadas}/${totalVagas}`, `${Math.max(totalVagas-totalOcupadas,0)} disponíveis`, 'blue')}
+      ${kpi('Ajuda de custo pendente', ajudaPendente, 'aguardando solicitação/pagamento', 'yellow')}
+      ${kpi('Folha (ativos)', fmtMoney(STATE.salarial.filter(s=>{const e=getEmp(s.chapa); return e && empAtivo(e);}).reduce((s,x)=>s+salarioAtual(x),0)), 'soma dos salários atuais', 'green')}
+    </div>
+  `;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function statusBarList(items, total){
+  return items.map(([label,count,color])=>{
+    const pct = total? Math.round(count/total*100) : 0;
+    return `<div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span class="text-dim">${esc(label)}</span><span class="mono">${count}</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--${color})"></div></div>
+    </div>`;
+  }).join('');
+}
+function fmtMoney(n){ return (n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function salarioAtual(s){ const base=Number(s.salarioBase)||0; const ajustes=s.ajustes||[]; const last=ajustes[ajustes.length-1]; const pct=last? Number(last.percentual)||0 : 0; return base*(1+pct/100); }
+
+/* ============================================================
+   PÁGINA: EFETIVO
+   ============================================================ */
+let efetivoFilter = {q:'', status:'ATIVOS'};
+
+function renderEfetivo(){ withFocusPreserved(renderEfetivoInner); }
+function renderEfetivoInner(){
+  let list = STATE.efetivo.slice();
+  if(efetivoFilter.status==='ATIVOS') list = list.filter(empAtivo);
+  if(efetivoFilter.status==='DESLIGADOS') list = list.filter(e=>!empAtivo(e));
+  if(efetivoFilter.q){
+    const q = efetivoFilter.q.toLowerCase();
+    list = list.filter(e=> (e.nome||'').toLowerCase().includes(q) || String(e.chapa).includes(q) || (e.funcao||'').toLowerCase().includes(q));
+  }
+  list.sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+
+  const rows = list.map(e=>{
+    const ativo = empAtivo(e);
+    const idade = e.dtNascimento ? calcIdade(e.dtNascimento) : null;
+    return `<tr>
+      <td class="mono">${esc(e.chapa)}</td>
+      <td><b>${esc(e.nome)}</b></td>
+      <td class="text-dim">${esc(e.funcao)}</td>
+      <td class="mono text-dim">${idade!==null ? idade+' anos' : '—'}</td>
+      <td>${chip(e.tipo==='B'?'blue':'gray', 'Tipo '+esc(e.tipo))}</td>
+      <td class="mono text-dim">${fmtDate(e.dtAdmissao)}</td>
+      <td class="mono text-dim">${fmtDate(e.dtInicioObra)}</td>
+      <td>${ativo? chip('green','Ativo') : chip('red','Desligado')}</td>
+      <td class="row-actions">${canEdit() ? `
+        <button class="btn btn-sm btn-ghost" onclick="openEfetivoForm('${esc(e.chapa)}')">Editar</button>
+        <button class="btn btn-sm btn-ghost btn-danger" onclick="deleteEfetivo('${esc(e.chapa)}')">Excluir</button>` : `<span class="text-faint">—</span>`}</td>
+    </tr>`;
+  });
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="topbar">
+      <div><div class="page-title">Efetivo</div><div class="page-sub">${list.length} de ${STATE.efetivo.length} colaboradores</div></div>
+      <div class="topbar-actions">${canEdit() ? `<button class="btn btn-primary" onclick="openEfetivoForm()">+ Novo colaborador</button>` : ''}</div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="search-box"><span>🔎</span><input id="searchInput" placeholder="buscar por nome, chapa ou função" value="${esc(efetivoFilter.q)}" oninput="efetivoFilter.q=this.value;renderEfetivo()"></div>
+        <select class="filter-select" onchange="efetivoFilter.status=this.value;renderEfetivo()">
+          <option value="ATIVOS" ${efetivoFilter.status==='ATIVOS'?'selected':''}>Somente ativos</option>
+          <option value="TODOS" ${efetivoFilter.status==='TODOS'?'selected':''}>Todos</option>
+          <option value="DESLIGADOS" ${efetivoFilter.status==='DESLIGADOS'?'selected':''}>Somente desligados</option>
+        </select>
+      </div>
+      ${tableSkeleton(['Chapa','Nome','Função','Idade','Tipo','Admissão','Início na obra','Status',''], rows)}
+    </div>
+  `;
+}
+
+function openEfetivoForm(chapa){
+  const editing = chapa ? getEmp(chapa) : null;
+  const idadeTxt = editing && editing.dtNascimento ? `${calcIdade(editing.dtNascimento)} anos` : '';
+  const body = `<div class="form-grid">
+    ${field('Chapa *', inp('f_chapa','text', editing?editing.chapa:'', 'ex: 6505'))}
+    ${field('Nome *', inp('f_nome','text', editing?editing.nome:''))}
+    ${field('CPF', `<input id="f_cpf" type="text" value="${esc(editing?editing.cpf:'')}" placeholder="000.000.000-00" maxlength="14" oninput="maskCpf(this)">`)}
+    ${field('Data de nascimento', `<input id="f_nascimento" type="date" value="${esc(editing?editing.dtNascimento:'')}" oninput="updateIdadePreview()">`, false, `<span id="idadePreview">${idadeTxt}</span>`)}
+    ${field('Função', sel('f_funcao', FUNCOES, editing?editing.funcao:FUNCOES[0]))}
+    ${field('Tipo de ciclo', sel('f_tipo', [{value:'A',label:'Tipo A — 60 dias / 7 de folga'},{value:'B',label:'Tipo B — 90 dias / 10 de folga'}], editing?editing.tipo:'A'))}
+    ${field('Data de admissão', inp('f_admissao','date', editing?editing.dtAdmissao:''))}
+    ${field('Data de início na obra', inp('f_inicioObra','date', editing?editing.dtInicioObra:''), false, 'usada para calcular os ciclos de folga')}
+    ${field('Data de desligamento', inp('f_desligamento','date', editing?editing.dtDesligamento:''), true, 'deixe em branco se o colaborador está ativo')}
+  </div>`;
+  const foot = `
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="submitEfetivo(${editing?`'${esc(chapa)}'`:'null'})">Salvar</button>
+  `;
+  openModal(editing?'Editar colaborador':'Novo colaborador', body, foot);
+}
+function maskCpf(el){
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  v = v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+  el.value = v;
+}
+function calcIdade(dtNascimento){
+  const bd = parseDate(dtNascimento);
+  if(!bd) return null;
+  let idade = TODAY.getFullYear() - bd.getFullYear();
+  const beforeBday = (TODAY.getMonth()<bd.getMonth()) || (TODAY.getMonth()===bd.getMonth() && TODAY.getDate()<bd.getDate());
+  if(beforeBday) idade--;
+  return idade;
+}
+function updateIdadePreview(){
+  const v = document.getElementById('f_nascimento').value;
+  const el = document.getElementById('idadePreview');
+  if(!el) return;
+  el.textContent = v ? `${calcIdade(v)} anos` : '';
+}
+
+function submitEfetivo(originalChapa){
+  if(!requireEdit()) return;
+  const chapa = val('f_chapa'), nome = val('f_nome');
+  if(!chapa || !nome){ toast('Preencha chapa e nome.','err'); return; }
+  const cpf = val('f_cpf');
+  if(cpf && cpf.replace(/\D/g,'').length !== 11){ toast('CPF incompleto — precisa ter 11 números.','err'); return; }
+  const record = {
+    chapa, nome, cpf: cpf || null, dtNascimento: val('f_nascimento') || null,
+    funcao: val('f_funcao'), tipo: val('f_tipo'),
+    dtAdmissao: val('f_admissao'), dtInicioObra: val('f_inicioObra') || val('f_admissao'),
+    dtDesligamento: val('f_desligamento') || null
+  };
+  if(originalChapa){
+    const idx = STATE.efetivo.findIndex(e=>String(e.chapa)===String(originalChapa));
+    if(idx>-1) STATE.efetivo[idx] = record;
+    if(originalChapa !== chapa){
+      [STATE.folga, STATE.passagens, STATE.ferias, STATE.salarial].forEach(arr=>{
+        const r = arr.find(x=>String(x.chapa)===String(originalChapa)); if(r) r.chapa = chapa;
+      });
+    }
+  } else {
+    if(STATE.efetivo.some(e=>String(e.chapa)===String(chapa))){ toast('Já existe um colaborador com essa chapa.','err'); return; }
+    STATE.efetivo.push(record);
+  }
+  closeModal();
+  saveEfetivo();
+}
+function deleteEfetivo(chapa){
+  if(!requireEdit()) return;
+  if(!confirm('Excluir este colaborador? Isso não apaga o histórico de folga/férias/salário associado.')) return;
+  STATE.efetivo = STATE.efetivo.filter(e=>String(e.chapa)!==String(chapa));
+  saveEfetivo();
+}
+
+/* ============================================================
+   PÁGINA: FOLGA DE CAMPO
+   ============================================================ */
+let folgaFilter = {q:'', status:'TODOS'};
+
+function renderFolga(){ withFocusPreserved(renderFolgaInner); }
+function renderFolgaInner(){
+  let list = STATE.efetivo.filter(empAtivo);
+  const rows = list.map(e=>{
+    const c = getActiveCycle(e);
+    const st = computeFolgaStatus(c);
+    return {emp:e, cycle:c, status:st};
+  });
+  let filtered = rows;
+  if(folgaFilter.status!=='TODOS') filtered = filtered.filter(r=>r.status===folgaFilter.status);
+  if(folgaFilter.q){
+    const q = folgaFilter.q.toLowerCase();
+    filtered = filtered.filter(r=>(r.emp.nome||'').toLowerCase().includes(q) || String(r.emp.chapa).includes(q));
+  }
+  const order = {RETORNO_ATRASADO:0, FOLGA_ATRASADA:1, FOLGA_URGENTE:2, EM_FOLGA:3, FOLGA_PROXIMA:4, SAIDA_AGENDADA:5, EM_DIA:6};
+  filtered.sort((a,b)=>(order[a.status]??9)-(order[b.status]??9));
+
+  const trs = filtered.map(r=>{
+    const meta = FOLGA_META[r.status];
+    const diasTxt = (r.cycle.sp && !r.cycle.sr) ? diasChip(diffDays(r.cycle.sp, TODAY)) : '<span class="text-faint">—</span>';
+    return `<tr>
+      <td class="mono">${esc(r.emp.chapa)}</td>
+      <td><b>${esc(r.emp.nome)}</b><div class="text-faint" style="font-size:11px;">${esc(r.emp.funcao||'')}</div></td>
+      <td class="text-faint">ciclo ${r.cycle.numero}</td>
+      <td>${chip(meta.color, meta.label)}</td>
+      <td class="mono text-dim">${fmtDate(r.cycle.sp)}</td>
+      <td>${diasTxt}</td>
+      <td class="mono text-dim">${r.cycle.sr? fmtDate(r.cycle.sr) : '—'}</td>
+      <td class="mono text-dim">${r.cycle.rr? fmtDate(r.cycle.rr) : (r.cycle.rp? fmtDate(r.cycle.rp)+' (prev.)':'—')}</td>
+      <td>${canEdit() ? `<button class="btn btn-sm btn-ghost" onclick="openFolgaForm('${esc(r.emp.chapa)}')">Registrar</button>` : '<span class="text-faint">—</span>'}</td>
+    </tr>`;
+  });
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="topbar">
+      <div><div class="page-title">Folga de Campo</div><div class="page-sub">${filtered.length} de ${rows.length} colaboradores ativos — ciclos gerados automaticamente, sem limite</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="search-box"><span>🔎</span><input id="searchInput" placeholder="buscar por nome ou chapa" value="${esc(folgaFilter.q)}" oninput="folgaFilter.q=this.value;renderFolga()"></div>
+        <select class="filter-select" onchange="folgaFilter.status=this.value;renderFolga()">
+          <option value="TODOS">Todos os status</option>
+          ${Object.entries(FOLGA_META).map(([k,m])=>`<option value="${k}" ${folgaFilter.status===k?'selected':''}>${m.label}</option>`).join('')}
+        </select>
+      </div>
+      ${tableSkeleton(['Chapa','Nome','Ciclo','Status','Saída prevista','Dias p/ saída','Saída real','Retorno',''], trs)}
+    </div>
+  `;
+}
+
+function openFolgaForm(chapa){
+  const emp = getEmp(chapa);
+  const cycle = getActiveCycle(emp);
+  const body = `
+    <div class="subtle-card" style="margin-bottom:16px;">
+      <b>${esc(emp.nome)}</b> · <span class="mono text-dim">${esc(emp.chapa)}</span> · ciclo ${cycle.numero} (tipo ${esc(emp.tipo)})<br>
+      <span class="text-faint" style="font-size:11.5px;">Saída prevista: ${fmtDate(cycle.sp)}${cycle.rp? ' · Retorno previsto: '+fmtDate(cycle.rp):''}</span>
+    </div>
+    <div class="form-grid">
+      ${field('Data de saída real', inp('f_saidaReal','date', cycle.sr? toISO(cycle.sr):''), false, 'pode ser uma data futura — é quando a passagem foi comprada')}
+      ${field('Data de retorno real', inp('f_retornoReal','date', cycle.rr? toISO(cycle.rr):''), false, 'preencha junto se comprou ida e volta')}
+    </div>
+  `;
+  const foot = `
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="submitFolga('${esc(chapa)}', ${cycle.virtual}, ${cycle.virtual?'null':cycle.index})">Salvar</button>
+  `;
+  openModal('Registrar folga de campo', body, foot);
+}
+
+function submitFolga(chapa, isVirtual, index){
+  if(!requireEdit()) return;
+  const sr = val('f_saidaReal'), rr = val('f_retornoReal');
+  let rec = getFolgaRecord(chapa);
+  if(!rec){ rec = {chapa, ciclos:[]}; STATE.folga.push(rec); }
+  const emp = getEmp(chapa);
+  const cycle = getActiveCycle(emp);
+  const entry = {
+    saidaPrevista: cycle.sp? toISO(cycle.sp) : '',
+    saidaReal: sr || null,
+    retornoReal: rr || null
+  };
+  if(isVirtual){ rec.ciclos.push(entry); }
+  else { rec.ciclos[index] = {...rec.ciclos[index], saidaReal: sr||null, retornoReal: rr||null}; }
+  closeModal();
+  saveFolga();
+}
+
+/* ============================================================
+   PÁGINA: PASSAGENS
+   ============================================================ */
+function renderPassagens(){
+  const list = STATE.efetivo.filter(empAtivo).map(e=>{
+    const c = getActiveCycle(e);
+    const manual = getPassagemInfo(e.chapa);
+    const st = computePassagemStatus(c, manual);
+    return {emp:e, cycle:c, manual, st};
+  });
+  const order = {red:0, yellow:1, gray:2, green:3};
+  list.sort((a,b)=>(order[a.st.level]??9)-(order[b.st.level]??9));
+
+  const trs = list.map(r=>`<tr>
+    <td class="mono">${esc(r.emp.chapa)}</td>
+    <td><b>${esc(r.emp.nome)}</b></td>
+    <td class="text-dim">${esc(r.manual.cidade||'—')}${r.manual.estado?'/'+esc(r.manual.estado):''}</td>
+    <td class="mono text-dim">${fmtDate(r.cycle.sp)}</td>
+    <td class="mono text-dim">${r.cycle.sp? (diffDays(r.cycle.sp,TODAY)+'d') : '—'}</td>
+    <td>${chip(r.st.level, r.st.label)}</td>
+    <td>${canEdit() ? `<button class="btn btn-sm btn-ghost" onclick="openPassagemForm('${esc(r.emp.chapa)}')">Editar</button>` : '<span class="text-faint">—</span>'}</td>
+  </tr>`).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="topbar">
+      <div><div class="page-title">Passagens</div><div class="page-sub">Segue automaticamente o ciclo de folga ainda pendente de cada colaborador</div></div>
+    </div>
+    <div class="panel">${tableSkeleton(['Chapa','Nome','Origem','Próxima saída prevista','Dias até a saída','Status',''], [trs])}</div>
+  `;
+}
+
+function openPassagemForm(chapa){
+  const m = getPassagemInfo(chapa);
+  const body = `<div class="form-grid">
+    ${field('Cidade de origem', inp('f_cidade','text', m.cidade))}
+    ${field('Estado', inp('f_estado','text', m.estado, 'ex: GO'))}
+    ${field('Status da passagem', sel('f_statusPass', ['PENDENTE','SOLICITADA','EMITIDA'], m.status||'PENDENTE'), true)}
+  </div>`;
+  const foot = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="submitPassagem('${esc(chapa)}')">Salvar</button>`;
+  openModal('Editar passagem', body, foot);
+}
+function submitPassagem(chapa){
+  if(!requireEdit()) return;
+  const record = {chapa, cidade:val('f_cidade'), estado:val('f_estado'), status:val('f_statusPass')};
+  const idx = STATE.passagens.findIndex(p=>String(p.chapa)===String(chapa));
+  if(idx>-1) STATE.passagens[idx]=record; else STATE.passagens.push(record);
+  closeModal(); savePassagens();
+}
+
+/* ============================================================
+   PÁGINA: FÉRIAS
+   ============================================================ */
+function renderFerias(){
+  const list = STATE.efetivo.filter(empAtivo).map(e=>{
+    const p = getActivePeriodo(e);
+    const st = computeFeriasStatus(p);
+    return {emp:e, periodo:p, st};
+  });
+  const order = {VENCIDA:0, URGENTE:1, VENCENDO:2, EM_GOZO:3, GOZO_AGENDADO:4, EM_DIA:5, CONCLUIDA:6};
+  list.sort((a,b)=>(order[a.st]??9)-(order[b.st]??9));
+
+  const trs = list.map(r=>{
+    const meta = FERIAS_META[r.st];
+    return `<tr>
+      <td class="mono">${esc(r.emp.chapa)}</td>
+      <td><b>${esc(r.emp.nome)}</b></td>
+      <td class="text-faint">período ${r.periodo.numero}</td>
+      <td class="mono text-dim">${fmtDate(r.periodo.fimPeriodo)}</td>
+      <td class="mono text-dim">${fmtDate(r.periodo.dataLimite)}</td>
+      <td>${chip(meta.color, meta.label)}</td>
+      <td>${canEdit() ? `<button class="btn btn-sm btn-ghost" onclick="openFeriasForm('${esc(r.emp.chapa)}')">Registrar</button>` : '<span class="text-faint">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="topbar">
+      <div><div class="page-title">Férias</div><div class="page-sub">Prazo legal: início do gozo até 11 meses após o fim do período aquisitivo</div></div>
+    </div>
+    <div class="panel">${tableSkeleton(['Chapa','Nome','Período','Fim do período aquisitivo','Prazo limite','Status',''], [trs])}</div>
+  `;
+}
+
+function openFeriasForm(chapa){
+  const emp = getEmp(chapa);
+  const p = getActivePeriodo(emp);
+  const body = `
+    <div class="subtle-card" style="margin-bottom:16px;">
+      <b>${esc(emp.nome)}</b> · <span class="mono text-dim">${esc(emp.chapa)}</span> · período ${p.numero}<br>
+      <span class="text-faint" style="font-size:11.5px;">Fim do período aquisitivo: ${fmtDate(p.fimPeriodo)} · Prazo limite: ${fmtDate(p.dataLimite)}</span>
+    </div>
+    <div class="form-grid">
+      ${field('Início do gozo', inp('f_gozoInicio','date', p.gozoInicio?toISO(p.gozoInicio):''))}
+      ${field('Fim do gozo', inp('f_gozoFim','date', p.gozoFim?toISO(p.gozoFim):''))}
+    </div>`;
+  const foot = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="submitFerias('${esc(chapa)}', ${p.virtual}, ${p.virtual?'null':p.index})">Salvar</button>`;
+  openModal('Registrar férias', body, foot);
+}
+function submitFerias(chapa, isVirtual, index){
+  if(!requireEdit()) return;
+  const gi = val('f_gozoInicio'), gf = val('f_gozoFim');
+  let rec = getFeriasRecord(chapa);
+  if(!rec){ rec={chapa, periodos:[]}; STATE.ferias.push(rec); }
+  const emp = getEmp(chapa);
+  const p = getActivePeriodo(emp);
+  const entry = {fimPeriodo: toISO(p.fimPeriodo), dataLimite: toISO(p.dataLimite), gozoInicio: gi||null, gozoFim: gf||null};
+  if(isVirtual) rec.periodos.push(entry);
+  else rec.periodos[index] = {...rec.periodos[index], gozoInicio: gi||null, gozoFim: gf||null};
+  closeModal(); saveFerias();
+}
+
+/* ============================================================
+   PÁGINA: AJUDA DE CUSTO
+   ============================================================ */
+function renderAjudaCusto(){
+  const list = STATE.ajudacusto.slice().sort((a,b)=>(b.competencia||'').localeCompare(a.competencia||''));
+  const trs = list.map(a=>{
+    const emp = getEmp(a.chapa);
+    return `<tr>
+      <td class="mono">${esc(a.chapa)}</td>
+      <td>${esc(emp? emp.nome : '—')}</td>
+      <td class="mono text-dim">${esc(a.competencia)}</td>
+      <td class="mono">${fmtMoney(a.valor)}</td>
+      <td class="mono text-dim">${a.dataSolicitacao? fmtDate(a.dataSolicitacao):'—'}</td>
+      <td>${chip(a.status==='PAGO'?'green':a.status==='APROVADO'?'blue':'yellow', a.status)}</td>
+      <td class="row-actions">${canEdit() ? `
+        <button class="btn btn-sm btn-ghost" onclick="openAjudaCustoForm('${a.id}')">Editar</button>
+        <button class="btn btn-sm btn-ghost btn-danger" onclick="deleteAjudaCusto('${a.id}')">Excluir</button>` : `<span class="text-faint">—</span>`}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="topbar">
+      <div><div class="page-title">Ajuda de Custo</div><div class="page-sub">${list.length} lançamentos</div></div>
+      <div class="topbar-actions">${canEdit() ? `<button class="btn btn-primary" onclick="openAjudaCustoForm()">+ Novo lançamento</button>` : ''}</div>
+    </div>
+    <div class="panel">${tableSkeleton(['Chapa','Nome','Competência','Valor','Solicitado em','Status',''], [trs])}</div>
+  `;
+}
+function openAjudaCustoForm(id){
+  const editing = id ? STATE.ajudacusto.find(a=>a.id===id) : null;
+  const body = `<div class="form-grid">
+    ${field('Chapa *', inp('f_ac_chapa','text', editing?editing.chapa:''))}
+    ${field('Competência (mês/ano) *', inp('f_ac_comp','month', editing?editing.competencia:''))}
+    ${field('Valor (R$)', inp('f_ac_valor','number', editing?editing.valor:''))}
+    ${field('Data da solicitação', inp('f_ac_data','date', editing?editing.dataSolicitacao:''))}
+    ${field('Status', sel('f_ac_status',['PENDENTE','APROVADO','PAGO'], editing?editing.status:'PENDENTE'), true)}
+  </div>`;
+  const foot = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="submitAjudaCusto(${editing?`'${id}'`:'null'})">Salvar</button>`;
+  openModal(editing?'Editar lançamento':'Novo lançamento', body, foot);
+}
+function submitAjudaCusto(id){
+  if(!requireEdit()) return;
+  const chapa = val('f_ac_chapa');
+  if(!chapa){ toast('Informe a chapa.','err'); return; }
+  const record = {id: id||uid(), chapa, competencia: val('f_ac_comp'), valor: Number(val('f_ac_valor'))||0, dataSolicitacao: val('f_ac_data')||null, status: val('f_ac_status')};
+  if(id){ const idx = STATE.ajudacusto.findIndex(a=>a.id===id); STATE.ajudacusto[idx]=record; }
+  else STATE.ajudacusto.push(record);
+  closeModal(); saveAjudaCusto();
+}
+function deleteAjudaCusto(id){
+  if(!requireEdit()) return;
+  if(!confirm('Excluir este lançamento?')) return;
+  STATE.ajudacusto = STATE.ajudacusto.filter(a=>a.id!==id);
+  saveAjudaCusto();
+}
+
+/* ============================================================
+   PÁGINA: ALOJAMENTOS
+   ============================================================ */
+let alojamentosView = 'casas';
+let itensFilter = 'TODOS';
+
+function renderAlojamentos(){
+  document.getElementById('mainContent').innerHTML = `
+    <div class="topbar">
+      <div><div class="page-title">Alojamentos</div><div class="page-sub">${STATE.alojamentos.length} imóveis cadastrados</div></div>
+      <div class="topbar-actions">
+        ${canEdit() && alojamentosView==='casas' ? `<button class="btn btn-primary" onclick="openAlojamentoForm()">+ Novo alojamento</button>` : ''}
+        ${canEdit() && alojamentosView==='itens' ? `<button class="btn btn-primary" onclick="openItemForm()">+ Novo item</button>` : ''}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn ${alojamentosView==='casas'?'btn-primary':'btn-ghost'}" onclick="alojamentosView='casas';renderAlojamentos()">⌂ Casas</button>
+      <button class="btn ${alojamentosView==='itens'?'btn-primary':'btn-ghost'}" onclick="alojamentosView='itens';renderAlojamentos()">▤ Mobília / Itens</button>
+    </div>
+    <div id="alojamentosBody"></div>
+  `;
+  if(alojamentosView==='casas') renderAlojamentosCasas();
+  else renderAlojamentosItens();
+}
+
+function renderAlojamentosCasas(){
+  const cards = STATE.alojamentos.map(a=>{
+    const cap = Number(a.capacidade)||0;
+    const moradores = a.moradores||[];
+    const itens = a.itens||[];
+    const vagas = Math.max(cap - moradores.length,0);
+    const pct = cap? Math.round(moradores.length/cap*100) : 0;
+    return `<div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">⌂ ${esc(a.nome)} <span class="cnt">${moradores.length}/${cap} vagas · ${itens.length} itens</span></div>
+        <div class="row-actions">${canEdit() ? `
+          <button class="btn btn-sm btn-ghost" onclick="openAlojamentoForm('${a.id}')">Editar</button>
+          <button class="btn btn-sm btn-ghost btn-danger" onclick="deleteAlojamento('${a.id}')">Excluir</button>` : ''}</div>
+      </div>
+      <div class="text-faint" style="font-size:12px;margin-bottom:10px;">${esc(a.endereco||'')}</div>
+      <div class="bar-track" style="margin-bottom:12px;"><div class="bar-fill" style="width:${pct}%;background:${vagas===0?'var(--red)':'var(--accent)'}"></div></div>
+      <div class="avatar-list">
+        ${moradores.map(chapa=>{const e=getEmp(chapa); return `<span class="avatar-tag">${esc(e?e.nome:chapa)}</span>`;}).join('') || '<span class="text-faint" style="font-size:12px;">Nenhum morador</span>'}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('alojamentosBody').innerHTML = `<div class="grid grid-2">${cards || `<div class="panel">${emptyState('⌂','Nenhum alojamento cadastrado ainda.')}</div>`}</div>`;
+}
+
+function renderAlojamentosItens(){
+  let flat = [];
+  STATE.alojamentos.forEach(a=>{
+    (a.itens||[]).forEach(it=>flat.push({casa:a, item:it}));
+  });
+  if(itensFilter==='COM') flat = flat.filter(x=>x.item.patrimonio);
+  if(itensFilter==='SEM') flat = flat.filter(x=>!x.item.patrimonio);
+
+  const comPatrimonio = STATE.alojamentos.reduce((s,a)=>s+(a.itens||[]).filter(i=>i.patrimonio).length,0);
+  const semPatrimonio = STATE.alojamentos.reduce((s,a)=>s+(a.itens||[]).filter(i=>!i.patrimonio).length,0);
+
+  const trs = flat.map(({casa,item})=>`<tr>
+    <td class="text-dim">${esc(casa.nome)}</td>
+    <td><b>${esc(item.nome)}</b></td>
+    <td class="mono text-dim">${item.quantidade||1}</td>
+    <td>${item.patrimonio ? chip('green','Com patrimônio') : chip('yellow','Sem patrimônio')}</td>
+    <td class="mono text-dim">${item.patrimonio ? esc(item.numeroPatrimonio||'—') : '—'}</td>
+    <td class="row-actions">${canEdit() ? `
+      <button class="btn btn-sm btn-ghost" onclick="openItemForm('${casa.id}','${item.id}')">Editar</button>
+      <button class="btn btn-sm btn-ghost btn-danger" onclick="deleteItem('${casa.id}','${item.id}')">Excluir</button>` : '<span class="text-faint">—</span>'}</td>
+  </tr>`).join('');
+
+  document.getElementById('alojamentosBody').innerHTML = `
+    <div class="grid grid-2" style="margin-bottom:14px;">
+      ${kpi('Itens com patrimônio', comPatrimonio, 'já tombados', 'green')}
+      ${kpi('Itens sem patrimônio', semPatrimonio, 'ainda precisam de tombamento', 'yellow')}
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Itens cadastrados <span class="cnt">${flat.length}</span></div>
+        <select class="filter-select" onchange="itensFilter=this.value;renderAlojamentosItens()">
+          <option value="TODOS" ${itensFilter==='TODOS'?'selected':''}>Todos</option>
+          <option value="COM" ${itensFilter==='COM'?'selected':''}>Com patrimônio</option>
+          <option value="SEM" ${itensFilter==='SEM'?'selected':''}>Sem patrimônio</option>
+        </select>
+      </div>
+      ${tableSkeleton(['Casa','Item','Qtde','Patrimônio','Nº patrimônio',''], [trs])}
+    </div>
+  `;
+}
+function openAlojamentoForm(id){
+  const editing = id ? STATE.alojamentos.find(a=>a.id===id) : null;
+  const moradores = editing ? [...(editing.moradores||[])] : [];
+  window.__tmpMoradores = moradores;
+  const body = `<div class="form-grid">
+    ${field('Nome do alojamento *', inp('f_al_nome','text', editing?editing.nome:''))}
+    ${field('Capacidade (vagas) *', inp('f_al_cap','number', editing?editing.capacidade:''))}
+    ${field('Endereço', inp('f_al_end','text', editing?editing.endereco:''), true)}
+    <div class="section-divider">Moradores</div>
+    <div class="field span2">
+      <div id="moradoresList" class="avatar-list">${renderMoradoresTags()}</div>
+      <div class="add-inline">
+        <input id="f_al_novoMorador" placeholder="chapa do colaborador" list="chapasList">
+        <datalist id="chapasList">${STATE.efetivo.filter(empAtivo).map(e=>`<option value="${esc(e.chapa)}">${esc(e.nome)}</option>`).join('')}</datalist>
+        <button class="btn btn-sm" onclick="addMoradorTmp()">Adicionar</button>
+      </div>
+    </div>
+  </div>`;
+  const foot = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="submitAlojamento(${editing?`'${id}'`:'null'})">Salvar</button>`;
+  openModal(editing?'Editar alojamento':'Novo alojamento', body, foot);
+}
+function renderMoradoresTags(){
+  return (window.__tmpMoradores||[]).map(chapa=>{
+    const e = getEmp(chapa);
+    return `<span class="avatar-tag">${esc(e?e.nome:chapa)}<span class="rm" onclick="removeMoradorTmp('${esc(chapa)}')">✕</span></span>`;
+  }).join('') || '<span class="text-faint" style="font-size:12px;">Nenhum morador ainda</span>';
+}
+function addMoradorTmp(){
+  const chapa = val('f_al_novoMorador');
+  if(!chapa) return;
+  if(!window.__tmpMoradores.includes(chapa)) window.__tmpMoradores.push(chapa);
+  document.getElementById('moradoresList').innerHTML = renderMoradoresTags();
+  document.getElementById('f_al_novoMorador').value='';
+}
+function removeMoradorTmp(chapa){
+  window.__tmpMoradores = window.__tmpMoradores.filter(c=>c!==chapa);
+  document.getElementById('moradoresList').innerHTML = renderMoradoresTags();
+}
+function submitAlojamento(id){
+  if(!requireEdit()) return;
+  const nome = val('f_al_nome');
+  if(!nome){ toast('Informe o nome do alojamento.','err'); return; }
+  const existing = id ? STATE.alojamentos.find(a=>a.id===id) : null;
+  const record = {id: id||uid(), nome, capacidade: Number(val('f_al_cap'))||0, endereco: val('f_al_end'), moradores: window.__tmpMoradores||[], itens: existing?existing.itens||[]:[]};
+  if(id){ const idx = STATE.alojamentos.findIndex(a=>a.id===id); STATE.alojamentos[idx]=record; }
+  else STATE.alojamentos.push(record);
+  closeModal(); saveAlojamentos();
+}
+function deleteAlojamento(id){
+  if(!requireEdit()) return;
+  if(!confirm('Excluir este alojamento? Os itens de mobília cadastrados nele também serão excluídos.')) return;
+  STATE.alojamentos = STATE.alojamentos.filter(a=>a.id!==id);
+  saveAlojamentos();
+}
+
+function openItemForm(alojamentoId, itemId){
+  if(STATE.alojamentos.length===0){ toast('Cadastre um alojamento primeiro.','err'); return; }
+  let editingCasa = alojamentoId ? STATE.alojamentos.find(a=>a.id===alojamentoId) : null;
+  let editingItem = editingCasa && itemId ? (editingCasa.itens||[]).find(i=>i.id===itemId) : null;
+  const body = `<div class="form-grid">
+    ${field('Alojamento *', sel('f_it_casa', STATE.alojamentos.map(a=>({value:a.id,label:a.nome})), editingCasa?editingCasa.id:''), true)}
+    ${field('Item *', inp('f_it_nome','text', editingItem?editingItem.nome:'', 'ex: cama, geladeira, fogão'))}
+    ${field('Quantidade', inp('f_it_qtd','number', editingItem?editingItem.quantidade:1))}
+    <div class="field span2">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="f_it_patrimonio" ${editingItem&&editingItem.patrimonio?'checked':''} onchange="togglePatrimonioField()" style="width:auto;">
+        Tem número de patrimônio
+      </label>
+    </div>
+    <div class="field span2" id="f_it_numeroWrap" style="display:${editingItem&&editingItem.patrimonio?'flex':'none'};">
+      <label>Número do patrimônio</label>
+      <input id="f_it_numero" type="text" value="${esc(editingItem?editingItem.numeroPatrimonio:'')}" placeholder="ex: PAT-00123">
+    </div>
+  </div>`;
+  const foot = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="submitItem(${alojamentoId?`'${alojamentoId}'`:'null'}, ${itemId?`'${itemId}'`:'null'})">Salvar</button>`;
+  openModal(editingItem?'Editar item':'Novo item de mobília', body, foot);
+}
+function togglePatrimonioField(){
+  const on = document.getElementById('f_it_patrimonio').checked;
+  document.getElementById('f_it_numeroWrap').style.display = on ? 'flex' : 'none';
+}
+function submitItem(oldCasaId, itemId){
+  if(!requireEdit()) return;
+  const casaId = val('f_it_casa'), nome = val('f_it_nome');
+  if(!casaId){ toast('Selecione o alojamento.','err'); return; }
+  if(!nome){ toast('Informe o nome do item.','err'); return; }
+  const temPatrimonio = document.getElementById('f_it_patrimonio').checked;
+  const item = {
+    id: itemId || uid(), nome,
+    quantidade: Number(val('f_it_qtd'))||1,
+    patrimonio: temPatrimonio,
+    numeroPatrimonio: temPatrimonio ? val('f_it_numero') : null
+  };
+  // remove from old casa if moved
+  if(itemId && oldCasaId && oldCasaId !== casaId){
+    const oldCasa = STATE.alojamentos.find(a=>a.id===oldCasaId);
+    if(oldCasa) oldCasa.itens = (oldCasa.itens||[]).filter(i=>i.id!==itemId);
+  }
+  const casa = STATE.alojamentos.find(a=>a.id===casaId);
+  if(!casa){ toast('Alojamento não encontrado.','err'); return; }
+  casa.itens = casa.itens || [];
+  const idx = casa.itens.findIndex(i=>i.id===item.id);
+  if(idx>-1) casa.itens[idx] = item; else casa.itens.push(item);
+  closeModal();
+  saveAlojamentos();
+}
+function deleteItem(casaId, itemId){
+  if(!requireEdit()) return;
+  if(!confirm('Excluir este item?')) return;
+  const casa = STATE.alojamentos.find(a=>a.id===casaId);
+  if(casa) casa.itens = (casa.itens||[]).filter(i=>i.id!==itemId);
+  saveAlojamentos();
+}
+
+/* ============================================================
+   PÁGINA: BASE SALARIAL
+   ============================================================ */
+function renderSalarial(){
+  const list = STATE.efetivo.filter(empAtivo).map(e=>{
+    const s = STATE.salarial.find(x=>String(x.chapa)===String(e.chapa)) || {chapa:e.chapa, salarioBase:0, ajustes:[]};
+    return {emp:e, sal:s};
+  }).sort((a,b)=>(a.emp.nome||'').localeCompare(b.emp.nome||''));
+
+  const trs = list.map(r=>{
+    const atual = salarioAtual(r.sal);
+    const last = (r.sal.ajustes||[])[r.sal.ajustes.length-1];
+    return `<tr>
+      <td class="mono">${esc(r.emp.chapa)}</td>
+      <td><b>${esc(r.emp.nome)}</b></td>
+      <td class="mono text-dim">${fmtMoney(r.sal.salarioBase)}</td>
+      <td class="mono text-dim">${last? (Number(last.percentual)>0?'+':'')+last.percentual+'%' : '—'}</td>
+      <td class="mono"><b>${fmtMoney(atual)}</b></td>
+      <td>${canEdit() ? `<button class="btn btn-sm btn-ghost" onclick="openSalarialForm('${esc(r.emp.chapa)}')">Editar</button>` : '<span class="text-faint">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="topbar">
+      <div><div class="page-title">Base Salarial</div><div class="page-sub">Folha total (ativos): ${fmtMoney(list.reduce((s,r)=>s+salarioAtual(r.sal),0))}</div></div>
+    </div>
+    <div class="panel">${tableSkeleton(['Chapa','Nome','Salário base','Último ajuste','Salário atual',''], [trs])}</div>
+  `;
+}
+function openSalarialForm(chapa){
+  const s = STATE.salarial.find(x=>String(x.chapa)===String(chapa)) || {chapa, salarioBase:0, ajustes:[]};
+  const body = `<div class="form-grid">
+    ${field('Salário base (R$) *', inp('f_sal_base','number', s.salarioBase))}
+    ${field('Novo ajuste (%)', inp('f_sal_pct','number', '', 'ex: 5 para +5%'))}
+    ${field('Motivo do ajuste', inp('f_sal_motivo','text', '', 'ex: reajuste anual'), true)}
+    <div class="section-divider">Histórico de ajustes</div>
+    <div class="field span2">${(s.ajustes||[]).length? (s.ajustes||[]).map(a=>`<div class="subtle-card" style="margin-bottom:6px;font-size:12px;">${fmtDate(a.data)} · ${a.percentual>0?'+':''}${a.percentual}% · <span class="text-faint">${esc(a.motivo||'')}</span></div>`).join('') : '<span class="text-faint" style="font-size:12px;">Nenhum ajuste registrado</span>'}</div>
+  </div>`;
+  const foot = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="submitSalarial('${esc(chapa)}')">Salvar</button>`;
+  openModal('Editar salário — '+ (getEmp(chapa)||{}).nome, body, foot);
+}
+function submitSalarial(chapa){
+  if(!requireEdit()) return;
+  const base = Number(val('f_sal_base'))||0;
+  const pct = val('f_sal_pct');
+  let s = STATE.salarial.find(x=>String(x.chapa)===String(chapa));
+  if(!s){ s = {chapa, salarioBase:base, ajustes:[]}; STATE.salarial.push(s); }
+  s.salarioBase = base;
+  if(pct !== ''){ s.ajustes = s.ajustes||[]; s.ajustes.push({data: toISO(TODAY), percentual: Number(pct), motivo: val('f_sal_motivo')}); }
+  closeModal(); saveSalarial();
+}
+
+/* ============================================================
+   PÁGINA: PARÂMETROS
+   ============================================================ */
+function renderParametros(){
+  const p = STATE.params;
+  if(!canEdit()){
+    document.getElementById('mainContent').innerHTML = `
+      <div class="topbar"><div><div class="page-title">Parâmetros</div><div class="page-sub">Regras que controlam os cálculos e alertas automáticos do app</div></div></div>
+      <div class="panel">${emptyState('🔒','Desbloqueie a edição (cadeado no menu) pra ver e alterar os parâmetros.')}</div>
+    `;
+    return;
+  }
+  document.getElementById('mainContent').innerHTML = `
+    <div class="topbar"><div><div class="page-title">Parâmetros</div><div class="page-sub">Essas regras controlam todos os cálculos e alertas automáticos do app</div></div></div>
+    <div class="panel">
+      <div class="panel-title" style="margin-bottom:14px;">⟲ Regras de folga de campo</div>
+      <div class="form-grid">
+        ${field('Ciclo Tipo A — dias em obra', inp('p_cicloA','number', p.cicloA))}
+        ${field('Dias de folga — Tipo A', inp('p_folgaA','number', p.folgaA))}
+        ${field('Ciclo Tipo B — dias em obra', inp('p_cicloB','number', p.cicloB))}
+        ${field('Dias de folga — Tipo B', inp('p_folgaB','number', p.folgaB))}
+        ${field('🔴 Vermelho — urgente (dias antes da saída)', inp('p_folgaVermelho','number', p.alertaFolgaVermelho))}
+        ${field('🟡 Amarelo — alerta antecipado (dias antes da saída)', inp('p_folgaAmarelo','number', p.alertaFolgaAmarelo))}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" style="margin-bottom:14px;">✈ Regras de passagens</div>
+      <div class="form-grid">
+        ${field('Alerta crítico — vermelho (dias)', inp('p_critico','number', p.alertaCritico))}
+        ${field('Alerta amarelo — solicitar (dias)', inp('p_amarelo','number', p.alertaAmarelo))}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" style="margin-bottom:14px;">☀ Regras de férias</div>
+      <div class="form-grid">
+        ${field('Alerta urgente (dias antes do limite)', inp('p_feriasUrgente','number', p.alertaFeriasUrgente))}
+        ${field('Alerta vencendo (dias antes do limite)', inp('p_feriasVencendo','number', p.alertaFeriasVencendo))}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" style="margin-bottom:14px;">🏷 Identidade do app</div>
+      <div class="form-grid">
+        ${field('Nome do app (aparece no banner do Dashboard)', inp('p_appName','text', p.appName), true)}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" style="margin-bottom:14px;">🔒 Senha de edição</div>
+      <div class="form-grid">
+        ${field('Nova senha', inp('p_novaSenha','text', '', 'deixe em branco pra manter a atual'))}
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="submitParametros()">Salvar parâmetros</button>
+  `;
+}
+function submitParametros(){
+  if(!requireEdit()) return;
+  const novaSenha = val('p_novaSenha');
+  STATE.params = {
+    cicloA:Number(val('p_cicloA'))||60, folgaA:Number(val('p_folgaA'))||7,
+    cicloB:Number(val('p_cicloB'))||90, folgaB:Number(val('p_folgaB'))||10,
+    alertaFolgaVermelho:Number(val('p_folgaVermelho'))||5, alertaFolgaAmarelo:Number(val('p_folgaAmarelo'))||15,
+    alertaCritico:Number(val('p_critico'))||10, alertaAmarelo:Number(val('p_amarelo'))||25,
+    alertaFeriasUrgente:Number(val('p_feriasUrgente'))||30, alertaFeriasVencendo:Number(val('p_feriasVencendo'))||60,
+    editPassword: novaSenha ? novaSenha : STATE.params.editPassword,
+    appName: val('p_appName') || 'ADM DE OBRAS ENERWATT'
+  };
+  saveParametros();
+  if(novaSenha) toast('Senha de edição atualizada.');
+}
+
+/* ============================================================
+   NAVEGAÇÃO / ROTEAMENTO
+   ============================================================ */
+const PAGE_RENDER = {
+  dashboard: renderDashboard, efetivo: renderEfetivo, folga: renderFolga,
+  passagens: renderPassagens, ferias: renderFerias, ajudacusto: renderAjudaCusto,
+  alojamentos: renderAlojamentos, salarial: renderSalarial, parametros: renderParametros
+};
+
+function badgeFor(id){
+  const ativos = STATE.efetivo.filter(empAtivo);
+  if(id==='efetivo') return STATE.efetivo.length || '';
+  if(id==='folga'){
+    const n = ativos.filter(e=>{const st=computeFolgaStatus(getActiveCycle(e)); return st==='FOLGA_ATRASADA'||st==='RETORNO_ATRASADO'||st==='FOLGA_URGENTE';}).length;
+    return n || '';
+  }
+  if(id==='passagens'){
+    const n = ativos.filter(e=>computePassagemStatus(getActiveCycle(e), getPassagemInfo(e.chapa)).level==='red').length;
+    return n || '';
+  }
+  if(id==='ferias'){
+    const n = ativos.filter(e=>{const st=computeFeriasStatus(getActivePeriodo(e)); return st==='URGENTE'||st==='VENCIDA';}).length;
+    return n || '';
+  }
+  if(id==='ajudacusto'){ const n = STATE.ajudacusto.filter(a=>a.status==='PENDENTE').length; return n || ''; }
+  if(id==='alojamentos') return STATE.alojamentos.length || '';
+  return '';
+}
+
+function renderNav(){
+  document.getElementById('navList').innerHTML = NAV_ITEMS.map(item=>{
+    const b = badgeFor(item.id);
+    return `<div class="nav-item ${ROUTE===item.id?'active':''}" onclick="navigate('${item.id}')">
+      <span class="nav-icon">${item.icon}</span><span>${item.label}</span>
+      ${b!==''? `<span class="nav-badge">${b}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function navigate(route){
+  ROUTE = route;
+  render();
+  closeSidebar();
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebarEl').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebarEl').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('show');
+}
+
+function render(){
+  renderNav();
+  renderSidebarFoot();
+  const bt = document.getElementById('brandTitle');
+  if(bt) bt.textContent = STATE.params.appName || 'ADM DE OBRAS ENERWATT';
+  const mt = document.getElementById('mobileTopbarTitle');
+  if(mt) mt.textContent = STATE.params.appName || 'ADM DE OBRAS ENERWATT';
+  (PAGE_RENDER[ROUTE] || renderDashboard)();
+}
+function renderSidebarFoot(){
+  const el = document.getElementById('sidebarFoot');
+  if(!el) return;
+  if(STATE.editUnlocked){
+    el.innerHTML = `<div class="lock-row" onclick="lockEdit()"><span>🔓</span><span>Edição liberada — toque pra travar</span></div>`;
+  } else {
+    el.innerHTML = `<div class="lock-row" onclick="promptUnlock()"><span>🔒</span><span>Modo visualização — toque pra editar</span></div>`;
+  }
+}
+
+/* ---------- INIT ---------- */
+async function init(){
+  await loadAll();
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  render();
+}
+init();
+</script>
+</body>
+</html>
